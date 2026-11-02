@@ -22,7 +22,7 @@ Works from `file://` and from any static host. Posts and votes persist
 in the browser's localStorage.
 
 To reset the starter: clear the site's localStorage (or run
-`localStorage.removeItem("podium.v1")` in devtools) and reload.
+`localStorage.removeItem("podium1.v1")` in devtools) and reload.
 
 ## What is inside
 

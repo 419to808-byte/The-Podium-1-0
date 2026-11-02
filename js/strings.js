@@ -5,7 +5,7 @@
    ai-adapter.js and is untouched; local gate reasons map en->es below. */
 var PodiumStrings = (function () {
   "use strict";
-  var LANG_KEY = "podium.v1.lang";
+  var LANG_KEY = "podium1.v1.lang";
   var TABLE = {
     /* document */
     "doc.title": { en: "The Podium 1.0 \u2014 A Civic Portal", es: "The Podium 1.0 \u2014 Un portal c\u00edvico" },

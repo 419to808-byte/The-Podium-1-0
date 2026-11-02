@@ -425,7 +425,7 @@
     "footer.key.clear": "Clear",
     "preview.close": "Back to editing",
   };
-  var PS_NONE = { LANG_KEY: "podium.v1.lang",
+  var PS_NONE = { LANG_KEY: "podium1.v1.lang",
     t: function (id) { return EN_CHROME[id] || id; },
     tf: function (id, map) { var s = EN_CHROME[id] || id; if (map) Object.keys(map).forEach(function (k) { s = s.split("{" + k + "}").join(String(map[k])); }); return s; },
     tes: function (s) { return s; }, topicEs: function (s) { return s; }, statusEs: function (s) { return s; },
@@ -468,7 +468,7 @@
      sessionStorage on every view change, so a reload restores the same tab
      (a fresh tab has empty sessionStorage and boots to Live Feed as
      before). Deep links win over the saved tab; see init. */
-  var TAB_KEY = "podium.v1.tab";
+  var TAB_KEY = "podium1.v1.tab";
   var VALID_VIEWS = { feed: 1, post: 1, briefing: 1, watch: 1, prior: 1, status: 1 };
   function saveView(name) {
     try { window.sessionStorage.setItem(TAB_KEY, name); } catch (e) { /* session-only */ }
@@ -550,7 +550,7 @@
   var subtabs = document.querySelectorAll(".subtab");
   var FEED_SORTS = { recent: 1, top: 1, needs: 1, discover: 1 };
   var FEED_PAGE_SIZES = [10, 20, 50];
-  var FEED_STATE_KEY = "podium.v1.feed";
+  var FEED_STATE_KEY = "podium1.v1.feed";
   var feedSort = "recent";   /* recent | top | needs | discover */
   var feedTopic = "";        /* "" = all topics */
   var feedPageSize = 20;
@@ -1295,7 +1295,7 @@
      pool or count toward one post per cycle. Nothing here publishes: the
      "Use this version" click loads the approved words and runs the normal
      publish path, which re-verifies everything. */
-  var DRAFT_KEY = "podium.v1.draft";
+  var DRAFT_KEY = "podium1.v1.draft";
   var draftSaveTimer = null;
   function saveDraft() {
     if (draftSaveTimer) clearTimeout(draftSaveTimer);
@@ -2844,7 +2844,7 @@
      makes it timely. The current view refreshes in place; a draft being
      actively typed here is never overwritten. */
   window.addEventListener("storage", function (e) {
-    if (e.key === "podium.v1") {
+    if (e.key === "podium1.v1") {
       state = PodiumStore.load(etNow());
       renderCitizen();
       updateOnePostNotice();

@@ -3,7 +3,7 @@
 var PodiumStore = (function () {
   "use strict";
 
-  var KEY = "podium.v1";
+  var KEY = "podium1.v1";
 
   /* Current voting cycle follows the calendar date (cycle rollover):
      the cycle whose voting window contains today's ET date (inclusive).
