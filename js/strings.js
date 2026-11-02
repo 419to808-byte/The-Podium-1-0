@@ -1,0 +1,473 @@
+/* The Podium — interface strings. en values are the verbatim current
+   English chrome; es values are the Spanish translation. Post bodies,
+   citizen names, states, reference codes, votes, numbers, and dates are
+   NEVER translated here — only chrome. Gate verdict logic lives in
+   ai-adapter.js and is untouched; local gate reasons map en->es below. */
+var PodiumStrings = (function () {
+  "use strict";
+  var LANG_KEY = "podium.v1.lang";
+  var TABLE = {
+    /* document */
+    "doc.title": { en: "The Podium 1.0 \u2014 A Civic Portal", es: "The Podium 1.0 \u2014 Un portal c\u00edvico" },
+    "skip.main": { en: "Skip to main content", es: "Saltar al contenido principal" },
+    "gov.text": { en: "An official website of the United States government", es: "Un sitio web oficial del gobierno de los Estados Unidos" },
+    "gov.how": { en: "Here\u2019s how you know.", es: "As\u00ed es como lo sabes." },
+    /* header */
+    "brand.sub": { en: "The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation.", es: "El prop\u00f3sito de esta plataforma es garantizar que cada ciudadano tenga la oportunidad de ser escuchado por la naci\u00f3n." },
+
+
+    "citizen.signedin": { en: "Signed in as", es: "Sesi\u00f3n iniciada como" },
+
+
+
+
+
+
+    "citizen.state.label": { en: "State", es: "Estado" },
+    "citizen.state.aria": { en: "Your state", es: "Tu estado" },
+    "citizen.state.title": { en: "Optional: your stated state, stored on this device only.", es: "Opcional: tu estado declarado, guardado solo en este dispositivo." },
+    "citizen.state.unset": { en: "State not set", es: "Estado sin definir" },
+    "lang.label": { en: "Language", es: "Idioma" },
+    /* tabs */
+    "tab.feed": { en: "Live Feed", es: "Feed en vivo" },
+    "tab.briefing": { en: "The Weekly Briefing", es: "La sesi\u00f3n informativa semanal" },
+    "tab.prior": { en: "Prior Posts & Answers", es: "Publicaciones y respuestas anteriores" },
+    "tab.status": { en: "Status Updates", es: "Actualizaciones de estado" },
+    "tab.watch": { en: "Watch Live", es: "Ver en vivo" },
+    "tab.post": { en: "Submit Post", es: "Enviar publicaci\u00f3n" },
+    "tab.watchlive.badge": { en: "LIVE", es: "EN VIVO" },
+    "tab.watchlive.airing": { en: "Watch Live, briefing on air now", es: "Ver en vivo, sesi\u00f3n en directo ahora" },
+    "nav.primary": { en: "Primary", es: "Principal" },
+    /* verbatim rule card */
+    "rule.heading": { en: "The Verbatim Rule", es: "La regla textual" },
+    "rule.reminder": { en: "Reminder of the rule", es: "Recordatorio de la regla" },
+    "rule.p1": { en: "By the rules of this portal, the highest-voted post <strong>MUST</strong> be read aloud \u2014 word for word, exactly as its author wrote it \u2014 and discussed, by a representative of the United States, in front of the entire country. Another post, drawn at random, must be read and discussed the same way.", es: "Seg\u00fan las reglas de este portal, la publicaci\u00f3n m\u00e1s votada <strong>DEBE</strong> leerse en voz alta \u2014 palabra por palabra, exactamente como la escribi\u00f3 su autor \u2014 y debatirse, por un representante de los Estados Unidos, frente a todo el pa\u00eds. Otra publicaci\u00f3n, elegida al azar, debe leerse y debatirse de la misma manera." },
+    "rule.p2": { en: "AI will be used to detect profanity and errors, correct grammar, and suggest clearer formatting. It will never steer you: your topic, your position, or your meaning. And once your post is published, it is final.", es: "La IA se usar\u00e1 para detectar blasfemias y errores, corregir la gram\u00e1tica y sugerir un formato m\u00e1s claro. Nunca te dirigir\u00e1: ni tu tema, ni tu posici\u00f3n, ni tu significado. Y una vez publicada tu publicaci\u00f3n, es definitiva." },
+    "rule.p3": { en: "Keep in mind that your post may be read in front of the entire nation. Write in your most professional manner. Profanity, slang, and ridicule will not post. State your idea or concern plainly and professionally. You are not posting a comment. You are addressing the nation \u2014 speaking to and for every American. Give it the seriousness it deserves.", es: "Ten en cuenta que tu publicaci\u00f3n puede leerse frente a toda la naci\u00f3n. Escribe de la manera m\u00e1s profesional. Las blasfemias, la jerga y la burla no se publicar\u00e1n. Exp\u00f3n tu idea o inquietud de forma clara y profesional. No est\u00e1s publicando un comentario. Te diriges a la naci\u00f3n \u2014 hablando a y por cada estadounidense. Dale la seriedad que merece." },
+    "rule.readfull": { en: "Read the full rule", es: "Leer la regla completa" },
+    /* fine print */
+    "fine.summary": { en: "Fine print (official register)", es: "Letra peque\u00f1a (registro oficial)" },
+    "fine.lede": { en: "All submissions are subject to automated pre-publication review. Submissions containing profanity, slurs, or personal attacks shall not be published. Submissions containing slang or errors materially affecting comprehensibility shall be held pending correction by the submitting party, with suggested revisions provided for consideration; no submission shall be altered by the System without the submitting party\u2019s express action. Weekly selections shall consist of (i) the submission receiving the highest number of votes during the applicable period and (ii) one (1) submission selected by random drawing from among all eligible published submissions. Selected submissions shall be read aloud in their entirety, verbatim, and discussed in the weekly briefing. A published submission is final and shall not be edited or redacted.", es: "Todas las publicaciones est\u00e1n sujetas a revisi\u00f3n automatizada previa a la publicaci\u00f3n. Las publicaciones que contengan blasfemias, insultos o ataques personales no se publicar\u00e1n. Las publicaciones que contengan jerga o errores que afecten materialmente la comprensibilidad quedar\u00e1n retenidas hasta que la parte remitente las corrija, con revisiones sugeridas para su consideraci\u00f3n; ninguna publicaci\u00f3n ser\u00e1 alterada por el Sistema sin la acci\u00f3n expresa de la parte remitente. Las selecciones semanales consistir\u00e1n en (i) la publicaci\u00f3n que reciba el mayor n\u00famero de votos durante el per\u00edodo aplicable y (ii) una (1) publicaci\u00f3n seleccionada por sorteo aleatorio entre todas las publicaciones elegibles. Las publicaciones seleccionadas se leer\u00e1n en voz alta en su totalidad, textualmente, y se debatir\u00e1n en la sesi\u00f3n semanal. Una publicaci\u00f3n publicada es definitiva y no se editar\u00e1 ni se censurar\u00e1." },
+    "fine.statements": { en: "Statements of policy, principles, and fundamentals", es: "Declaraciones de pol\u00edticas, principios y fundamentos" },
+    "fine.purpose": { en: "The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation. Citizens will address the nation and speak on its behalf.", es: "El prop\u00f3sito de esta plataforma es garantizar que cada ciudadano tenga la oportunidad de ser escuchado por la naci\u00f3n. Los ciudadanos se dirigir\u00e1n a la naci\u00f3n y hablar\u00e1n en su nombre." },
+    "fine.li1": { en: "The highest-voted post and one randomly drawn post are read aloud word-for-word, in full, by a U.S. representative and discussed in the weekly briefing. No editor stands between author and nation. Nothing is edited after posting.", es: "La publicaci\u00f3n m\u00e1s votada y una publicaci\u00f3n elegida al azar se leen en voz alta palabra por palabra, en su totalidad, por un representante de EE. UU. y se debaten en la sesi\u00f3n semanal. Ning\u00fan editor se interpone entre el autor y la naci\u00f3n. Nada se edita despu\u00e9s de la publicaci\u00f3n." },
+    "fine.li2": { en: "AI detects problems and suggests wording before publication only. It never steers a post's topic, position, or meaning, and never changes, substitutes, or declines a post on its own.", es: "La IA detecta problemas y sugiere redacci\u00f3n solo antes de la publicaci\u00f3n. Nunca dirige el tema, la posici\u00f3n o el significado de una publicaci\u00f3n, y nunca cambia, sustituye ni rechaza una publicaci\u00f3n por su cuenta." },
+    "fine.li3": { en: "Profanity, slurs, and personal attacks are hard-blocked and never publish. Slang, misspellings, grammar, and unclear text are held with suggested rewording; the author accepts or retypes, and AI never silently changes text. Held drafts are not published, do not enter the draw, and do not use the citizen's one-post slot.", es: "Las blasfemias, los insultos y los ataques personales est\u00e1n bloqueados y nunca se publican. La jerga, los errores ortogr\u00e1ficos, la gram\u00e1tica y el texto poco claro quedan retenidos con una nueva redacci\u00f3n sugerida; el autor acepta o reescribe, y la IA nunca cambia texto en silencio. Los borradores retenidos no se publican, no entran en el sorteo y no usan el cupo de una publicaci\u00f3n del ciudadano." },
+    "fine.li4": { en: "Once published, a post is final. It cannot be deleted, withdrawn, archived, or hidden.", es: "Una vez publicada, una publicaci\u00f3n es definitiva. No se puede eliminar, retirar, archivar ni ocultar." },
+    "fine.li5": { en: "Voting is upvote-only. One vote per citizen per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET.", es: "La votaci\u00f3n es solo con voto a favor. Un voto por ciudadano por ciclo semanal, modificable hasta el cierre de la votaci\u00f3n el domingo a las 11:59 PM ET." },
+    "fine.li6": { en: "One post per citizen per weekly cycle.", es: "Una publicaci\u00f3n por ciudadano por ciclo semanal." },
+    "fine.li7": { en: "Posts are capped at 630 words.", es: "Las publicaciones est\u00e1n limitadas a 630 palabras." },
+    "fine.li8": { en: "The random draw is rig-proof: the eligible pool is frozen in a fixed published order at the cutoff, and the position is the NIST Randomness Beacon value mod pool size, plus one. The draw is internal only, with no button, replay, or re-roll.", es: "El sorteo aleatorio es a prueba de manipulaci\u00f3n: el grupo elegible se congela en un orden fijo publicado en el corte, y la posici\u00f3n es el valor del Faro de Aleatoriedad del NIST m\u00f3dulo el tama\u00f1o del grupo, m\u00e1s uno. El sorteo es solo interno, sin bot\u00f3n, repetici\u00f3n ni nuevo sorteo." },
+    "fine.li9": { en: "The committee prepares answers only. It never alters, substitutes, delays, or declines a selection. It reviews selections a week ahead and routes each answer to the correct branch and level.", es: "El comit\u00e9 solo prepara respuestas. Nunca altera, sustituye, retrasa ni rechaza una selecci\u00f3n. Revisa las selecciones con una semana de antelaci\u00f3n y dirige cada respuesta a la rama y al nivel correctos." },
+    "fine.li10": { en: "The committee does not fund. It asks for funds and allocates funds.", es: "El comit\u00e9 no financia. Pide fondos y asigna fondos." },
+    "fine.li11": { en: "Committee answers start as AI drafts, reviewed, edited, and approved by a real committee member who is the answerer of record. AI never delivers a final answer alone and never touches a citizen post. The public sees only approved answers.", es: "Las respuestas del comit\u00e9 comienzan como borradores de IA, revisados, editados y aprobados por un miembro real del comit\u00e9 que es el responsable registrado de la respuesta. La IA nunca entrega una respuesta final sola y nunca toca una publicaci\u00f3n ciudadana. El p\u00fablico solo ve respuestas aprobadas." },
+    "fine.li12": { en: "An exact-duplicate post in the same cycle does not create a new post; the citizen is offered an upvote on the existing post, with no post-anyway exit. The draw pool excludes the winner and any post exactly matching the winner. Similar-but-distinct posts are advisory only.", es: "Una publicaci\u00f3n exactamente duplicada en el mismo ciclo no crea una publicaci\u00f3n nueva; al ciudadano se le ofrece votar a favor de la publicaci\u00f3n existente, sin opci\u00f3n de publicarla de todos modos. El grupo del sorteo excluye a la ganadora y a cualquier publicaci\u00f3n que coincida exactamente con la ganadora. Las publicaciones similares pero distintas son solo orientativas." },
+    "fine.li13": { en: "The Live Feed shows the current cycle only. Past-cycle posts that were never selected are deleted; selected posts are kept as the briefing record.", es: "El Feed en vivo muestra solo el ciclo actual. Las publicaciones de ciclos pasados que nunca fueron seleccionadas se eliminan; las publicaciones seleccionadas se conservan como registro de la sesi\u00f3n." },
+    "fine.li14": { en: "Posting and voting run Monday 12:00 AM to Sunday 11:59 PM ET. The pool freezes at the Sunday cutoff, the draw is Monday at 12:00 PM ET, the committee has the week plus a Monday-Tuesday buffer, and the briefing airs Wednesdays at 1:00 PM ET as the fixed opening segment.", es: "La publicaci\u00f3n y la votaci\u00f3n van de lunes 12:00 AM a domingo 11:59 PM ET. El grupo se congela en el corte del domingo, el sorteo es el lunes a las 12:00 PM ET, el comit\u00e9 tiene la semana m\u00e1s un margen de lunes a martes, y la sesi\u00f3n se emite los mi\u00e9rcoles a la 1:00 PM ET como segmento fijo de apertura." },
+    "fine.li15": { en: "This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay publishes when that briefing airs. Prior Posts & Answers and Status Updates list aired selections only.", es: "Esta semana muestra solo la sesi\u00f3n m\u00e1s recientemente emitida. La pr\u00f3xima semana muestra las selecciones de la pr\u00f3xima sesi\u00f3n. La repetici\u00f3n de una sesi\u00f3n se publica cuando se emite esa sesi\u00f3n. Publicaciones y respuestas anteriores y Actualizaciones de estado listan solo selecciones emitidas." },
+    "fine.li16": { en: "Sign-in here is a placeholder: this starter runs as a single local profile with no identity verification. Real identity verification is required before production use.", es: "El inicio de sesi\u00f3n aqu\u00ed es provisional: esta versi\u00f3n inicial funciona con un \u00fanico perfil local sin verificaci\u00f3n de identidad. Se requiere verificaci\u00f3n de identidad real antes del uso en producci\u00f3n." },
+    "fine.li17": { en: "Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.", es: "Idioma: un ciudadano puede publicar en cualquier idioma. La publicaci\u00f3n original es el registro oficial y se lee en voz alta textualmente en el idioma del autor. Las traducciones son ayudas autom\u00e1ticas para los lectores y nunca sustituyen al original." },
+    /* feed */
+    "feed.aria": { en: "Feed of citizen posts", es: "Feed de publicaciones ciudadanas" },
+    "feed.order": { en: "Feed order", es: "Orden del feed" },
+    "feed.order.aria": { en: "Feed order", es: "Orden del feed" },
+
+    "feed.recent": { en: "Recent", es: "Recientes" },
+    "feed.top": { en: "Top Voted", es: "M\u00e1s votados" },
+    "feed.needs": { en: "Needs Votes", es: "Necesitan votos" },
+    "feed.discover": { en: "Discover", es: "Descubrir" },
+    "feed.topic": { en: "Topic", es: "Tema" },
+    "feed.alltopics": { en: "All topics", es: "Todos los temas" },
+    "feed.topicfilter.aria": { en: "Filter by topic", es: "Filtrar por tema" },
+    "feed.search": { en: "Keyword search", es: "B\u00fasqueda por palabra clave" },
+    "feed.search.ph": { en: "e.g. bridges, school lunches", es: "p. ej., puentes, almuerzos escolares" },
+    "feed.perpage": { en: "Per page", es: "Por p\u00e1gina" },
+    "feed.voterule": { en: "One vote per citizen per week. You can change it until voting closes Sunday at 11:59 PM ET.", es: "Un voto por ciudadano por semana. Puedes cambiarlo hasta el cierre de la votaci\u00f3n el domingo a las 11:59 PM ET." },
+    "feed.prev": { en: "\u2190 Prev", es: "\u2190 Anterior" },
+    "feed.next": { en: "Next \u2192", es: "Siguiente \u2192" },
+    "feed.page": { en: "Page", es: "P\u00e1gina" },
+    "feed.page.of": { en: "of", es: "de" },
+    "feed.opened.open": { en: "You opened a shared post. Sign in to upvote it. ", es: "Abriste una publicaci\u00f3n compartida. Inicia sesi\u00f3n para votar por ella. " },
+    "feed.opened.past": { en: "You opened a shared post from a past week. Voting is closed on past weeks\u2019 posts. ", es: "Abriste una publicaci\u00f3n compartida de una semana pasada. La votaci\u00f3n est\u00e1 cerrada en las publicaciones de semanas pasadas. " },
+    "feed.showfull": { en: "Show full feed", es: "Mostrar feed completo" },
+    "feed.gone": { en: "This post is no longer available. Posts that are not selected for a weekly briefing are removed when their cycle closes. ", es: "Esta publicaci\u00f3n ya no est\u00e1 disponible. Las publicaciones no seleccionadas para una sesi\u00f3n semanal se eliminan cuando se cierra su ciclo. " },
+    "feed.gone.li": { en: "This post is no longer available. Posts that are not selected for a weekly briefing are removed when their cycle closes.", es: "Esta publicaci\u00f3n ya no est\u00e1 disponible. Las publicaciones no seleccionadas para una sesi\u00f3n semanal se eliminan cuando se cierra su ciclo." },
+    "feed.nocode": { en: "No item with code {code}.", es: "Ning\u00fan elemento con el c\u00f3digo {code}." },
+    "feed.nocode.li": { en: "No post, answer, or update carries that code.", es: "Ninguna publicaci\u00f3n, respuesta o actualizaci\u00f3n lleva ese c\u00f3digo." },
+    "feed.code.thread": { en: "Code {code}: jumping to that item in the thread.", es: "C\u00f3digo {code}: saltando a ese elemento en el hilo." },
+    "feed.code.record": { en: "Code {code}: post plus its answer and updates.", es: "C\u00f3digo {code}: publicaci\u00f3n m\u00e1s su respuesta y actualizaciones." },
+    "feed.note.top": { en: "Highest-voted first. This week\u2019s leader becomes the top-voted briefing pick.", es: "Primero las m\u00e1s votadas. La l\u00edder de esta semana ser\u00e1 la selecci\u00f3n m\u00e1s votada de la sesi\u00f3n." },
+    "feed.note.needs": { en: "Least-voted first, so unseen posts surface. These are this week\u2019s posts \u2014 voting is open on all of them.", es: "Primero las menos votadas, para que afloren las publicaciones no vistas. Estas son las publicaciones de esta semana \u2014 la votaci\u00f3n est\u00e1 abierta en todas." },
+    "feed.note.discover": { en: "Shuffled for discovery \u2014 re-pick Discover for a fresh shuffle. These are this week\u2019s posts \u2014 voting is open on all of them.", es: "Mezcladas para descubrir \u2014 vuelve a elegir Descubrir para una nueva mezcla. Estas son las publicaciones de esta semana \u2014 la votaci\u00f3n est\u00e1 abierta en todas." },
+    "feed.note.results.one": { en: "1 result(s).", es: "1 resultado." },
+    "feed.note.results.many": { en: "{n} result(s).", es: "{n} resultados." },
+    "feed.note.recent": { en: "Newest first. These are this week\u2019s posts \u2014 voting is open on all of them.", es: "Primero las m\u00e1s recientes. Estas son las publicaciones de esta semana \u2014 la votaci\u00f3n est\u00e1 abierta en todas." },
+    "feed.note.filtered": { en: " Filtered to topic \u201c{topic}\u201d ({n}).", es: " Filtrado por tema \u00ab{topic}\u00bb ({n})." },
+    "feed.empty": { en: "No posts here yet.", es: "A\u00fan no hay publicaciones aqu\u00ed." },
+    "briefing.empty": { en: "No briefing has aired yet.", es: "A\u00fan no se ha emitido ninguna sesi\u00f3n informativa." },
+    "draw.pending": { en: "No draw has run yet \u2014 no posts, no pool, no winner.", es: "A\u00fan no se ha realizado ning\u00fan sorteo: sin publicaciones, sin grupo, sin ganador." },
+    "prior.empty": { en: "No prior briefings yet.", es: "A\u00fan no hay sesiones anteriores." },
+    "status.empty": { en: "No updates yet.", es: "A\u00fan no hay actualizaciones." },
+    "feed.fullrecord": { en: "See full record", es: "Ver registro completo" },
+    "feed.fullrecord.ref": { en: "Full record: {ref}", es: "Registro completo: {ref}" },
+    /* votes */
+    "vote.up": { en: "\u25b3 Upvote", es: "\u25b3 Votar" },
+    "vote.upvoted": { en: "\u25b2 Upvoted", es: "\u25b2 Votado" },
+    "vote.one": { en: "vote", es: "voto" },
+    "vote.many": { en: "votes", es: "votos" },
+    "vote.yours": { en: " \u00b7 Your vote", es: " \u00b7 Tu voto" },
+    "vote.closed": { en: " \u00b7 voting closed", es: " \u00b7 votaci\u00f3n cerrada" },
+    "vote.upvoteit": { en: "Upvote it instead", es: "Vota por esta en su lugar" },
+    "vote.upvoted.check": { en: "Upvoted \u2713", es: "Votado \u2713" },
+    "vote.closedweek": { en: "Voting closed (past week)", es: "Votaci\u00f3n cerrada (semana pasada)" },
+    "share.button": { en: "Share", es: "Compartir" },
+    "share.copied": { en: "Link copied \u2713", es: "Enlace copiado \u2713" },
+    "share.failed": { en: "Copy failed", es: "Error al copiar" },
+    "cycle.voting": { en: "voting now", es: "votando ahora" },
+    "date.now": { en: "just now", es: "ahora mismo" },
+    /* badges + selection words */
+    "badge.top": { en: "Top-voted", es: "M\u00e1s votada" },
+    "badge.random": { en: "Random pick", es: "Sorteo" },
+    "selbadge.top": { en: "TOP-VOTED", es: "M\u00c1S VOTADA" },
+    "selbadge.random": { en: "RANDOM DRAW", es: "SORTEO ALEATORIO" },
+    "selbadge.position": { en: "position", es: "posici\u00f3n" },
+    "selbadge.of": { en: "of", es: "de" },
+    "lib.top": { en: "Top-voted", es: "M\u00e1s votada" },
+    "lib.random": { en: "Random draw", es: "Sorteo" },
+    "thread.top": { en: "top-voted", es: "m\u00e1s votada" },
+    "thread.random": { en: "random draw", es: "sorteo" },
+    "seltitle.top": { en: "Top-voted selection", es: "Selecci\u00f3n m\u00e1s votada" },
+    "seltitle.random": { en: "Random-draw selection", es: "Selecci\u00f3n por sorteo" },
+    "pipe.top": { en: "top-voted", es: "m\u00e1s votada" },
+    "pipe.random": { en: "random pick", es: "sorteo" },
+    "pipe.none": { en: "not yet selected", es: "a\u00fan no seleccionada" },
+    "stage.selected": { en: "Selected", es: "Seleccionada" },
+    "stage.committee": { en: "In Committee Review", es: "En revisi\u00f3n del comit\u00e9" },
+    "stage.briefed": { en: "Briefed", es: "Informada" },
+    "stage.aria": { en: "Pipeline stage: {stage}", es: "Etapa del proceso: {stage}" },
+    "stage.inline.selected": { en: "selected", es: "seleccionada" },
+    "stage.inline.committee": { en: "in committee", es: "en comit\u00e9" },
+    "stage.inline.briefed": { en: "briefed", es: "informada" },
+    /* thread */
+    "thread.answer": { en: "Official Answer", es: "Respuesta oficial" },
+    "thread.update": { en: "Update", es: "Actualizaci\u00f3n" },
+    "thread.thispost": { en: "this post", es: "esta publicaci\u00f3n" },
+    "translate.button": { en: "Translate", es: "Traducir" },
+    "translate.label": { en: "Machine translation to English \u2014 the original above is the official record.", es: "Traducci\u00f3n autom\u00e1tica al espa\u00f1ol. El original arriba es el registro oficial." },
+    "translate.unavailable": { en: "Translation unavailable right now.", es: "Traducci\u00f3n no disponible en este momento." },
+    /* composer */
+    "post.aria": { en: "Post composer", es: "Redactor de publicaciones" },
+    "post.rule.applies": { en: "The Verbatim Rule applies.", es: "Se aplica la regla textual." },
+    "post.rule.text": { en: "Your post may be read aloud, word for word, in front of the entire nation. Profanity, slang, and ridicule will not post. Once published, it is final.", es: "Tu publicaci\u00f3n puede leerse en voz alta, palabra por palabra, frente a toda la naci\u00f3n. Las blasfemias, la jerga y la burla no se publicar\u00e1n. Una vez publicada, es definitiva." },
+    "post.rule.reminder": { en: "Your post may be read aloud, word for word, in front of the entire nation. Profanity, slang, and ridicule will not post. Once published, it is final.", es: "Tu publicaci\u00f3n puede leerse en voz alta, palabra por palabra, frente a toda la naci\u00f3n. Las blasfemias, la jerga y la burla no se publicar\u00e1n. Una vez publicada, es definitiva." },
+
+    "notice.published.a": { en: "<strong>One post per citizen per weekly cycle.</strong> You already published this week (", es: "<strong>Una publicaci\u00f3n por ciudadano por ciclo semanal.</strong> Ya publicaste esta semana (" },
+    "notice.published.b": { en: "). You can still vote on this week\u2019s posts.", es: "). Todav\u00eda puedes votar por las publicaciones de esta semana." },
+    "post.topic": { en: "Topic", es: "Tema" },
+    "post.topic.hint": { en: "Pick a topic, or accept the single AI suggestion at review.", es: "Elige un tema o acepta la \u00fanica sugerencia de la IA en la revisi\u00f3n." },
+    "post.timer.hint": { en: "read-aloud time \u00b7 max 630 words", es: "tiempo de lectura \u00b7 m\u00e1x. 630 palabras" },
+    "post.address": { en: "Your address to the nation", es: "Tu mensaje a la naci\u00f3n" },
+    "post.text.ph": { en: "State your idea or concern plainly and professionally\u2026", es: "Exp\u00f3n tu idea o inquietud de forma clara y profesional\u2026" },
+    "ai.live": { en: "AI: live (Muse Spark)", es: "IA: en directo (Muse Spark)" },
+    "ai.stub": { en: "AI: local fallback", es: "IA: local de reserva" },
+    "gate.overlimit": { en: "Too long for the national reading: {n} of 630 words maximum. Shorten your post to fit the 4:30 read-aloud slot.", es: "Demasiado largo para la lectura nacional: {n} de 630 palabras como m\u00e1ximo. Acorta tu publicaci\u00f3n para ajustarla al espacio de lectura de 4:30." },
+    "gate.hard": { en: "<strong>Cannot publish:</strong> this draft contains {spans}, which counts as profanity, a slur, or a personal attack. Such posts are never published. Remove it and keep your address professional.", es: "<strong>No se puede publicar:</strong> este borrador contiene {spans}, lo cual cuenta como blasfemia, insulto o ataque personal. Tales publicaciones nunca se publican. Elim\u00ednalo y mant\u00e9n un tono profesional." },
+    "gate.soft": { en: "<strong>Held for your correction:</strong> {n} wording issue(s) would embarrass you before a national audience. Accept a suggestion or retype the word yourself \u2014 nothing changes without your action.", es: "<strong>Retenido para tu correcci\u00f3n:</strong> {n} problema(s) de redacci\u00f3n te har\u00edan pasar verg\u00fcenza ante una audiencia nacional. Acepta una sugerencia o reescribe la palabra t\u00fa mismo \u2014 nada cambia sin tu acci\u00f3n." },
+    "chip.use": { en: "Use \u201c{sug}\u201d", es: "Usar \u00ab{sug}\u00bb" },
+    "chip.remove": { en: "Remove it", es: "Eliminarla" },
+    "chip.aria.replace": { en: "Replace {w} with {s}", es: "Reemplazar {w} con {s}" },
+    "chip.aria.remove": { en: "Replace {w} by removing it", es: "Reemplazar {w} elimin\u00e1ndola" },
+    "gate.punct": { en: "Punctuation and spacing need a touch-up \u2014 one click fixes double spaces, spaces before punctuation, and the final period. ", es: "La puntuaci\u00f3n y los espacios necesitan un retoque \u2014 un clic corrige los espacios dobles, los espacios antes de la puntuaci\u00f3n y el punto final. " },
+    "gate.punct.fix": { en: "Fix punctuation and spacing", es: "Corregir puntuaci\u00f3n y espacios" },
+    "gate.unclear": { en: "<strong>Held so you can be heard clearly:</strong> this draft is hard to understand as written, so it cannot publish yet. This is not a refusal \u2014 your post is not declined. Use the help below, or fix the draft yourself; you can return and publish at any time.", es: "<strong>Retenido para que se te escuche con claridad:</strong> este borrador es dif\u00edcil de entender tal como est\u00e1 escrito, as\u00ed que a\u00fan no puede publicarse. Esto no es un rechazo \u2014 tu publicaci\u00f3n no est\u00e1 descartada. Usa la ayuda de abajo o corrige el borrador t\u00fa mismo; puedes volver y publicar en cualquier momento." },
+    "gate.ok": { en: "Wording check passed. Your topic, position, and meaning are yours alone \u2014 the check never touches them.", es: "Revisi\u00f3n de redacci\u00f3n superada. Tu tema, posici\u00f3n y significado son solo tuyos \u2014 la revisi\u00f3n nunca los toca." },
+    "reason.live": { en: "Live wording check.", es: "Revisi\u00f3n de redacci\u00f3n en vivo." },
+    "offer.built": { en: "Built only from your answers:", es: "Construida solo con tus respuestas:" },
+    "offer.proposed": { en: "Proposed version \u2014 same meaning, clearer words:", es: "Versi\u00f3n propuesta \u2014 mismo significado, palabras m\u00e1s claras:" },
+    "offer.until": { en: " Nothing publishes until you click \u201cUse this version.\u201d", es: " Nada se publica hasta que hagas clic en \u00abUsar esta versi\u00f3n\u00bb." },
+    "offer.yours": { en: "Your words:", es: "Tus palabras:" },
+    "offer.version": { en: "Proposed version:", es: "Versi\u00f3n propuesta:" },
+    "offer.use": { en: "Use this version", es: "Usar esta versi\u00f3n" },
+    "offer.keep": { en: "Keep my words", es: "Conservar mis palabras" },
+    "offer.hear": { en: "Hear the proposed version", es: "Escuchar la versi\u00f3n propuesta" },
+    "offer.novoice": { en: "Your browser cannot read aloud; please read the proposed version above before approving.", es: "Tu navegador no puede leer en voz alta; por favor lee la versi\u00f3n propuesta de arriba antes de aprobar." },
+    "prompts.title": { en: "Help us understand \u2014 answer in your own words:", es: "Ay\u00fadanos a entender \u2014 responde con tus propias palabras:" },
+    "prompts.nooffer": { en: " no rewrite is offered because no clear position could be found in the draft. Nothing is invented: a draft is built only from your answers, and only with your approval.", es: " no se ofrece una nueva redacci\u00f3n porque no se encontr\u00f3 una posici\u00f3n clara en el borrador. Nada se inventa: un borrador se construye solo con tus respuestas, y solo con tu aprobaci\u00f3n." },
+    "prompts.what": { en: "What happened?", es: "\u00bfQu\u00e9 pas\u00f3?" },
+    "prompts.want": { en: "What do you want fixed or changed?", es: "\u00bfQu\u00e9 quieres que se arregle o cambie?" },
+    "prompts.who": { en: "Who should fix it?", es: "\u00bfQui\u00e9n deber\u00eda arreglarlo?" },
+    "prompts.build": { en: "Build my draft from these answers", es: "Crear mi borrador con estas respuestas" },
+    "prompts.needone": { en: "Answer at least one question above, in your own words.", es: "Responde al menos una pregunta de arriba, con tus propias palabras." },
+    "prompts.badwords": { en: "These answers cannot be used as written: they contain wording that can never publish. Change the flagged words and try again.", es: "Estas respuestas no pueden usarse tal como est\u00e1n: contienen redacci\u00f3n que nunca puede publicarse. Cambia las palabras marcadas e int\u00e9ntalo de nuevo." },
+    "hear.draft": { en: "Hear this draft", es: "Escuchar este borrador" },
+    "hear.novoice": { en: "Your browser cannot read text aloud.", es: "Tu navegador no puede leer texto en voz alta." },
+    "preview.hear": { en: "Hear it as the nation will", es: "Esc\u00fachala como la naci\u00f3n" },
+    "preview.publish": { en: "Publish (final)", es: "Publicar (definitiva)" },
+    "preview.back": { en: "Back to editing", es: "Volver a editar" },
+    "preview.title": { en: "Weekly briefing \u2014 verbatim reading", es: "Sesi\u00f3n semanal \u2014 lectura textual" },
+    "preview.words": { en: "words", es: "palabras" },
+    "preview.readaloud": { en: "read aloud", es: "en voz alta" },
+    "preview.suggest.a": { en: "AI topic suggestion, shown once at review \u2014 yours to accept or ignore: <strong>", es: "Sugerencia de tema por IA, mostrada una vez en la revisi\u00f3n \u2014 t\u00fa decides si aceptarla: <strong>" },
+    "preview.suggest.b": { en: "</strong> ", es: "</strong> " },
+    "preview.usetopic": { en: "Use this topic", es: "Usar este tema" },
+    "publish.note": { en: "Publishing is final: posts cannot be edited or redacted. The AI checks wording only \u2014 never your topic, position, or meaning.", es: "Publicar es definitivo: las publicaciones no se pueden editar ni censurar. La IA revisa solo la redacci\u00f3n \u2014 nunca tu tema, posici\u00f3n o significado." },
+    "publish.done": { en: "Published \u2014 final. Your post cannot be edited or redacted. It now stands for this week\u2019s vote.", es: "Publicada \u2014 definitiva. Tu publicaci\u00f3n no se puede editar ni censurar. Ahora est\u00e1 en la votaci\u00f3n de esta semana." },
+    "voiced.title": { en: "Already voiced", es: "Ya expresado" },
+    "voiced.dismiss": { en: "\u00d7 Dismiss", es: "\u00d7 Descartar" },
+    "voiced.dismiss.aria": { en: "Dismiss this suggestion", es: "Descartar esta sugerencia" },
+    "voiced.reminder": { en: "A conflicting post may divide votes and reduce the likelihood of your concern being heard.", es: "Una publicaci\u00f3n en conflicto puede dividir los votos y reducir la probabilidad de que tu inquietud sea escuchada." },
+    "voiced.instead": { en: "Vote for theirs instead", es: "Vota por la suya en su lugar" },
+    "voiced.both": { en: "Post mine and vote theirs too", es: "Publicar la m\u00eda y votar por la suya tambi\u00e9n" },
+    "voiced.asis": { en: "Post mine as-is", es: "Publicar la m\u00eda tal cual" },
+    "copy.exists": { en: "This post already exists in this cycle \u2014 upvote it to add your voice.", es: "Esta publicaci\u00f3n ya existe en este ciclo \u2014 vota por ella para sumar tu voz." },
+    "copy.existing": { en: "<strong>Existing post:</strong> \u201c{quote}\u201d", es: "<strong>Publicaci\u00f3n existente:</strong> \u00ab{quote}\u00bb" },
+    /* citizen modal */
+
+
+
+
+
+    /* briefing */
+    "briefing.aria": { en: "Weekly briefing", es: "Sesi\u00f3n informativa semanal" },
+    "briefing.title": { en: "This week\u2019s briefing \u2014 {date}", es: "La sesi\u00f3n de esta semana \u2014 {date}" },
+    "briefing.lede1": { en: "Two posts take the majority of the segment: the highest-voted post and one post drawn at random. Both are read aloud verbatim and answered. Follow-ups on earlier posts get only a brief live mention; the full record lives under Prior Posts & Answers and Status Updates.", es: "Dos publicaciones ocupan la mayor parte del segmento: la publicaci\u00f3n m\u00e1s votada y una publicaci\u00f3n elegida al azar. Ambas se leen en voz alta textualmente y se responden. Los seguimientos de publicaciones anteriores solo reciben una breve menci\u00f3n en directo; el registro completo est\u00e1 en Publicaciones y respuestas anteriores y Actualizaciones de estado." },
+    "briefing.lede2": { en: "The locked weekly schedule (all times ET): posting and voting week Monday 00:00 \u2192 Sunday 23:59; cutoff Sunday 23:59, when the eligible pool is frozen and published; draw Monday 12:00, pre-announced; committee week Monday \u2192 Sunday to evaluate both selected posts and formulate both answers \u2014 answers ONLY, it can never alter, substitute, delay, or decline a selection; briefing Wednesday 1:00 PM. The Podium segment is the fixed opening segment of the Wednesday briefing: if no regular briefing is scheduled that Wednesday, the segment still runs standalone at the same time, same room, same cameras.", es: "El horario semanal fijo (todas las horas ET): semana de publicaci\u00f3n y votaci\u00f3n de lunes 00:00 \u2192 domingo 23:59; corte el domingo 23:59, cuando el grupo elegible se congela y se publica; sorteo el lunes 12:00, preanunciado; semana del comit\u00e9 de lunes \u2192 domingo para evaluar ambas publicaciones seleccionadas y formular ambas respuestas \u2014 solo respuestas, nunca puede alterar, sustituir, retrasar ni rechazar una selecci\u00f3n; sesi\u00f3n el mi\u00e9rcoles 1:00 PM. El segmento de The Podium es el segmento fijo de apertura de la sesi\u00f3n del mi\u00e9rcoles: si no hay sesi\u00f3n ordinaria programada ese mi\u00e9rcoles, el segmento se realiza igualmente por separado a la misma hora, en la misma sala, con las mismas c\u00e1maras." },
+    "briefing.watch": { en: "Watch Live \u2192", es: "Ver en vivo \u2192" },
+    "briefing.watch.hint": { en: "Attend the airing of this briefing.", es: "Asiste a la emisi\u00f3n de esta sesi\u00f3n." },
+    "briefing.next": { en: "Next Week", es: "La pr\u00f3xima semana" },
+    "briefing.next.hint": { en: "Selected posts in committee review. Answers are still being formulated \u2014 never presented as final. These selections are published after the Monday draw, once the draw has selected the posts: the full posts for the next briefing appear here from the draw onward, in full, with answers coming on the briefing date.", es: "Publicaciones seleccionadas en revisi\u00f3n del comit\u00e9. Las respuestas a\u00fan se est\u00e1n formulando \u2014 nunca se presentan como definitivas. Estas selecciones se publican despu\u00e9s del sorteo del lunes, una vez que el sorteo ha elegido las publicaciones: las publicaciones completas para la pr\u00f3xima sesi\u00f3n aparecen aqu\u00ed desde el sorteo en adelante, \u00edntegras, con respuestas en la fecha de la sesi\u00f3n." },
+    "briefing.draw": { en: "The random draw \u2014 verifiably fair", es: "El sorteo aleatorio \u2014 verificablemente justo" },
+    "briefing.draw.lede": { en: "The eligible pool is frozen and published <em>first</em> (all gate-passed posts since the last draw, minus the top-voted winner). The system runs the draw at the pre-announced time: <code>position = beacon value mod pool size + 1</code>. Random selection conducted using the NIST Randomness Beacon.", es: "El grupo elegible se congela y se publica <em>primero</em> (todas las publicaciones aprobadas desde el \u00faltimo sorteo, menos la ganadora m\u00e1s votada). El sistema ejecuta el sorteo a la hora preanunciada: <code>position = beacon value mod pool size + 1</code>. Selecci\u00f3n aleatoria realizada con el Faro de Aleatoriedad del NIST." },
+    "briefing.draw.excluded": { en: "Excluded from the pool", es: "Excluidas del grupo" },
+    "briefing.draw.readonly": { en: "Read-only record: pool size, beacon timestamp and value, computed position, and the drawn post. The draw is an internal system function \u2014 nothing here re-runs it.", es: "Registro de solo lectura: tama\u00f1o del grupo, marca de tiempo y valor del faro, posici\u00f3n calculada y la publicaci\u00f3n sorteada. El sorteo es una funci\u00f3n interna del sistema \u2014 nada aqu\u00ed lo repite." },
+    "briefing.draw.worked": { en: "Worked example", es: "Ejemplo pr\u00e1ctico" },
+    "briefing.draw.worked.body": { en: "Pool of 12, beacon value ending \u20264839 \u2192 4839 mod 12 = 3 \u2192 +1 = <strong>post #4</strong>.", es: "Grupo de 12, valor del faro terminado en \u20264839 \u2192 4839 mod 12 = 3 \u2192 +1 = <strong>publicaci\u00f3n n.\u00ba 4</strong>." },
+    "briefing.draw.committee": { en: "Committee rule: the committee prepares answers ONLY. It can never alter, substitute, delay, or decline a selected post. It has one week to formulate an answer and route the topic to the right branch or level of government.", es: "Regla del comit\u00e9: el comit\u00e9 prepara respuestas SOLAMENTE. Nunca puede alterar, sustituir, retrasar ni rechazar una publicaci\u00f3n seleccionada. Tiene una semana para formular una respuesta y dirigir el tema a la rama o al nivel de gobierno correctos." },
+    "draw.cycle": { en: "Cycle", es: "Ciclo" },
+    "draw.frozen": { en: "Pool frozen", es: "Grupo congelado" },
+    "draw.frozen.val": { en: "{cutoff} \u2014 {n} eligible posts (winner and winner-matching copies excluded), published before the draw", es: "{cutoff} \u2014 {n} publicaciones elegibles (excluidas la ganadora y sus copias), publicadas antes del sorteo" },
+    "draw.beacon": { en: "Beacon pulse", es: "Pulso del faro" },
+    "draw.beacon.val": { en: "{time} \u2014 value {hex} (numeric excerpt {num})", es: "{time} \u2014 valor {hex} (extracto num\u00e9rico {num})" },
+    "draw.computation": { en: "Computation", es: "C\u00e1lculo" },
+    "draw.computation.val": { en: "{num} mod {size} = {r} \u2192 +1 = post #{pos}", es: "{num} mod {size} = {r} \u2192 +1 = publicaci\u00f3n n.\u00ba {pos}" },
+    "draw.selected": { en: "Selected", es: "Selecci\u00f3n" },
+    "draw.winner": { en: "already has the briefing\u2019s top slot", es: "ya ocupa el primer puesto de la sesi\u00f3n" },
+    "draw.dupe": { en: "anti-flood deduplication (content matches the winner\u2019s)", es: "desduplicaci\u00f3n anti-inundaci\u00f3n (el contenido coincide con el de la ganadora)" },
+    "draw.readfull": { en: "Read full post", es: "Leer publicaci\u00f3n completa" },
+    "draw.collapse": { en: "Collapse", es: "Contraer" },
+    "zone.post.excerpt": { en: "Citizen Post \u2014 excerpt, verbatim", es: "Publicaci\u00f3n ciudadana \u2014 extracto, textual" },
+    "zone.post.full": { en: "Citizen Post \u2014 in full, verbatim", es: "Publicaci\u00f3n ciudadana \u2014 \u00edntegra, textual" },
+    "zone.post.read": { en: "Read verbatim in full", es: "Leer textual \u00edntegra" },
+    "zone.answer.excerpt": { en: "Official Answer \u2014 excerpt", es: "Respuesta oficial \u2014 extracto" },
+    "zone.answer.full": { en: "Official Answer \u2014 in full", es: "Respuesta oficial \u2014 \u00edntegra" },
+    "zone.answer.read": { en: "Read answer in full", es: "Leer respuesta \u00edntegra" },
+    "zone.summary": { en: "Show summary", es: "Mostrar resumen" },
+    "zone.post.screening": { en: "Citizen Post \u2014 verbatim", es: "Publicaci\u00f3n ciudadana \u2014 textual" },
+    "zone.answer.screening": { en: "Committee Answer \u2014 verbatim", es: "Respuesta del comit\u00e9 \u2014 textual" },
+    "zone.post.next": { en: "Citizen Post \u2014 verbatim in full", es: "Publicaci\u00f3n ciudadana \u2014 textual \u00edntegra" },
+    "zone.post.final": { en: "Citizen Post \u2014 verbatim, final", es: "Publicaci\u00f3n ciudadana \u2014 textual, final" },
+    "next.selectedfor": { en: "\u2014 {name} \u00b7 selected for next week\u2019s briefing", es: "\u2014 {name} \u00b7 seleccionada para la sesi\u00f3n de la pr\u00f3xima semana" },
+    "next.answercoming": { en: "Answer coming {date}. The committee is still formulating it.", es: "Respuesta el {date}. El comit\u00e9 a\u00fan la est\u00e1 formulando." },
+    "wonder.draft": { en: "Draft answer with Wonder", es: "Redactar respuesta con Wonder" },
+
+
+    "wonder.pending": { en: "AI-drafted by Muse Wonder \u2014 pending committee review", es: "Borrador de IA por Muse Wonder \u2014 pendiente de revisi\u00f3n del comit\u00e9" },
+    "wonder.edited": { en: "AI-drafted by Muse Wonder, edited by committee \u2014 pending committee review", es: "Borrador de IA por Muse Wonder, editado por el comit\u00e9 \u2014 pendiente de revisi\u00f3n del comit\u00e9" },
+    "wonder.edit": { en: "Edit draft", es: "Editar borrador" },
+    "wonder.edit.aria": { en: "Edit the committee draft answer", es: "Editar el borrador de respuesta del comit\u00e9" },
+    "wonder.save": { en: "Save edit", es: "Guardar edici\u00f3n" },
+    "wonder.cancel": { en: "Cancel", es: "Cancelar" },
+    "wonder.approve": { en: "Approve draft", es: "Aprobar borrador" },
+    "wonder.drafting": { en: "Drafting with Muse Wonder ({model})...", es: "Redactando con Muse Wonder ({model})..." },
+    "wonder.unavailable": { en: "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.", es: "Muse Wonder no est\u00e1 disponible (sin clave de sesi\u00f3n, o la llamada fall\u00f3) \u2014 no hay borrador disponible. Las respuestas nunca son redactadas por Spark." },
+    "wonder.approved": { en: "Approved by committee", es: "Aprobada por el comit\u00e9" },
+    /* prior + status */
+    "prior.aria": { en: "Prior posts and answers archive", es: "Archivo de publicaciones y respuestas anteriores" },
+    "prior.lede": { en: "The archive of past briefing selections: each item shows the original post, verbatim, plus the committee\u2019s answer. Check anytime \u2014 this is not part of the live show.", es: "El archivo de selecciones de sesiones pasadas: cada elemento muestra la publicaci\u00f3n original, textual, m\u00e1s la respuesta del comit\u00e9. Consulta cuando quieras \u2014 esto no es parte del programa en directo." },
+    "thread.selected": { en: "Selected post", es: "Publicaci\u00f3n seleccionada" },
+    "prior.updatelatest": { en: "Most recent update", es: "Actualizaci\u00f3n m\u00e1s reciente" },
+    "prior.status": { en: "Status:", es: "Estado:" },
+    "prior.tostatus": { en: "Status updates for {ref} \u2192", es: "Actualizaciones de estado de {ref} \u2192" },
+    "status.aria": { en: "Status updates follow-through record", es: "Registro de seguimiento de actualizaciones de estado" },
+    "status.lede": { en: "The follow-through record: each item shows the dated progress updates plus the current status. Check anytime \u2014 this is not part of the live show.", es: "El registro de seguimiento: cada elemento muestra las actualizaciones de progreso fechadas m\u00e1s el estado actual. Consulta cuando quieras \u2014 esto no es parte del programa en directo." },
+    "status.dated": { en: "Dated progress updates", es: "Actualizaciones de progreso fechadas" },
+    "status.toprior": { en: "\u2190 Post and answer for {ref}", es: "\u2190 Publicaci\u00f3n y respuesta de {ref}" },
+    /* watch */
+    "watch.aria": { en: "Watch live broadcast", es: "Ver transmisi\u00f3n en vivo" },
+    "watch.lede": { en: "Attend the weekly briefing broadcast. The Weekly Briefing tab holds the record of what was and will be discussed; this tab is the airing itself.", es: "Asiste a la emisi\u00f3n de la sesi\u00f3n semanal. La pesta\u00f1a La sesi\u00f3n informativa semanal guarda el registro de lo que se discuti\u00f3 y se discutir\u00e1; esta pesta\u00f1a es la emisi\u00f3n misma." },
+
+    "watch.auto": { en: "Auto (clock)", es: "Auto (reloj)" },
+    "watch.upcoming": { en: "Upcoming", es: "Pr\u00f3xima" },
+    "watch.live": { en: "Live", es: "En vivo" },
+    "watch.replay": { en: "Replay", es: "Repetici\u00f3n" },
+    "watch.live.title": { en: "Live \u2014 This Week\u2019s Briefing", es: "En vivo \u2014 La sesi\u00f3n de esta semana" },
+    "watch.replay.title": { en: "Replay \u2014 {cycle}", es: "Repetici\u00f3n \u2014 {cycle}" },
+    "watch.live.badge": { en: "LIVE", es: "EN VIVO" },
+    "watch.replay.badge": { en: "REPLAY", es: "REPETICI\u00d3N" },
+
+
+
+
+
+
+
+
+
+    "watch.onair": { en: "The briefing is on air now", es: "La sesi\u00f3n est\u00e1 en directo ahora" },
+    "watch.next": { en: "Next briefing: {label}, 1:00 PM ET", es: "Pr\u00f3xima sesi\u00f3n: {label}, 1:00 PM ET" },
+    "watch.noagenda": { en: "Agenda to be announced after the next draw.", es: "Programa por anunciar despu\u00e9s del pr\u00f3ximo sorteo." },
+    "watch.noselect": { en: "Selections for this briefing have not been drawn yet.", es: "Las selecciones para esta sesi\u00f3n a\u00fan no se han sorteado." },
+    "watch.draw": { en: "Draw: {date}.", es: "Sorteo: {date}." },
+    "watch.onbill": { en: "On the air bill ({cycle} selections):", es: "En el programa ({cycle} selecciones):" },
+    "watch.hint": { en: "For a live stream or a pre-recorded screening, whichever is next. If you are on this tab when the briefing airs, the stream starts automatically.", es: "Para una transmisi\u00f3n en vivo o una proyecci\u00f3n pregrabada, la que sea la pr\u00f3xima. Si est\u00e1s en esta pesta\u00f1a cuando se emite la sesi\u00f3n, la transmisi\u00f3n comienza autom\u00e1ticamente." },
+    "watch.screening": { en: "Screening", es: "Proyecci\u00f3n" },
+    "watch.nowreading": { en: "Now reading ({i} of {n})", es: "Leyendo ahora ({i} de {n})" },
+    "watch.noitems": { en: "Agenda to be announced.", es: "Programa por anunciar." },
+    "watch.library": { en: "Pre-recorded screenings", es: "Proyecciones pregrabadas" },
+    "watch.library.empty": { en: "No past briefings yet.", es: "A\u00fan no hay sesiones anteriores." },
+    "watch.standby": { en: "No live briefing at this time.", es: "No hay sesi\u00f3n informativa en vivo en este momento." },
+    "watch.library.aired": { en: "aired", es: "emitida" },
+
+    "watch.play.screening": { en: "Play this screening", es: "Reproducir esta proyecci\u00f3n" },
+    "watch.processing": { en: "Replay processing, available soon", es: "Repetici\u00f3n en proceso, disponible pronto" },
+    "watch.processing.full": { en: "Replay processing, available soon \u2014 {cycle} aired {date}.", es: "Repetici\u00f3n en proceso, disponible pronto \u2014 {cycle} emitida el {date}." },
+    "watch.stop": { en: "Stop replay", es: "Detener repetici\u00f3n" },
+    "watch.back": { en: "\u2190 Briefing record", es: "\u2190 Registro de la sesi\u00f3n" },
+
+    /* footer */
+    "footer.about": { en: "About", es: "Acerca de" },
+    "footer.process": { en: "The Process", es: "El proceso" },
+    "footer.process.chain": { en: "Live Feed \u2192 The Weekly Briefing \u2192 Prior Posts & Answers \u2192 Status Updates \u2192 Watch Live \u2192 Submit Post", es: "Feed en vivo \u2192 La sesi\u00f3n informativa semanal \u2192 Publicaciones y respuestas anteriores \u2192 Actualizaciones de estado \u2192 Ver en vivo \u2192 Enviar publicaci\u00f3n" },
+    "footer.notices": { en: "Notices", es: "Avisos" },
+    "footer.starternotice": { en: "<strong>Starter notice:</strong> sign-in is a placeholder; no real personal data is collected, requested, or stored. AI checks run locally until a Model API key is provided for the session. This starter ships with no users, posts, answers, or updates.", es: "<strong>Aviso inicial:</strong> el inicio de sesi\u00f3n es provisional y local; no se recopila, solicita ni almacena ning\u00fan dato personal real. Las revisiones de IA se ejecutan localmente hasta que se proporcione una clave de API del modelo para la sesi\u00f3n. Esta versi\u00f3n inicial no incluye usuarios, publicaciones, respuestas ni actualizaciones." },
+    "footer.key": { en: "Model API key", es: "Clave de API del modelo" },
+    "footer.key.hint": { en: "(session only \u2014 kept in sessionStorage, cleared when the tab closes; never committed)", es: "(solo sesi\u00f3n \u2014 se guarda en sessionStorage, se borra al cerrar la pesta\u00f1a; nunca se registra)" },
+    "footer.key.ph": { en: "Paste key for this session", es: "Pega la clave para esta sesi\u00f3n" },
+    "footer.key.save": { en: "Save key", es: "Guardar clave" },
+    "footer.key.clear": { en: "Clear", es: "Borrar" },
+    "preview.close": { en: "Back to editing", es: "Volver a editar" }
+  };
+  /* Local (deterministic, English-word) gate reasons, en verbatim -> es.
+     Model-generated reasons already arrive in the post's language (Prompt 2)
+     and pass through untouched when they match nothing here. */
+  var REASON_ES = {
+    "Slang: say \u201cgoing to\u201d for a national audience.": "Jerga: di \u00abgoing to\u00bb para una audiencia nacional.",
+    "Slang: say \u201cwant to\u201d for a national audience.": "Jerga: di \u00abwant to\u00bb para una audiencia nacional.",
+    "Slang: say \u201chave to\u201d for a national audience.": "Jerga: di \u00abhave to\u00bb para una audiencia nacional.",
+    "Slang: write \u201ckind of\u201d in full.": "Jerga: escribe \u00abkind of\u00bb completo.",
+    "Slang: write \u201csort of\u201d in full.": "Jerga: escribe \u00absort of\u00bb completo.",
+    "Slang: use \u201cyes\u201d in a formal address.": "Jerga: usa \u00abyes\u00bb en un discurso formal.",
+    "Slang: use \u201cno\u201d in a formal address.": "Jerga: usa \u00abno\u00bb en un discurso formal.",
+    "Slang: laughter markers do not belong in a formal address \u2014 remove it.": "Jerga: las risas escritas no pertenecen a un discurso formal \u2014 elim\u00ednala.",
+    "Slang: exclamations like this will not read well aloud \u2014 remove it.": "Jerga: exclamaciones as\u00ed no se leen bien en voz alta \u2014 elim\u00ednala.",
+    "Slang: write \u201cby the way\u201d in full.": "Jerga: escribe \u00abby the way\u00bb completo.",
+    "Slang: write \u201cI do not know\u201d in full.": "Jerga: escribe \u00abI do not know\u00bb completo.",
+    "Slang: use \u201cfrankly\u201d in a formal address.": "Jerga: usa \u00abfrankly\u00bb en un discurso formal.",
+    "Slang: write \u201cin my view\u201d in full.": "Jerga: escribe \u00abin my view\u00bb completo.",
+    "Slang: write \u201cI\u2019m\u201d with an apostrophe.": "Jerga: escribe \u00abI\u2019m\u00bb con ap\u00f3strofo.",
+    "Slang: write \u201cplease\u201d in full.": "Jerga: escribe \u00abplease\u00bb completo.",
+    "Slang: write \u201cthank you\u201d in full.": "Jerga: escribe \u00abthank you\u00bb completo.",
+    "Misspelling: \u201creceive\u201d follows i-before-e here.": "Error ortogr\u00e1fico: \u00abreceive\u00bb lleva i antes de e aqu\u00ed.",
+    "Misspelling: \u201caddress\u201d has two d\u2019s.": "Error ortogr\u00e1fico: \u00abaddress\u00bb lleva dos d.",
+    "Misspelling: \u201cgovernment\u201d has an n before the m.": "Error ortogr\u00e1fico: \u00abgovernment\u00bb lleva n antes de m.",
+    "Misspelling: it is \u201cdefinitely\u201d.": "Error ortogr\u00e1fico: es \u00abdefinitely\u00bb.",
+    "Misspelling: it is \u201cseparate\u201d.": "Error ortogr\u00e1fico: es \u00abseparate\u00bb.",
+    "Misspelling: \u201cnecessary\u201d has one c and two s\u2019s.": "Error ortogr\u00e1fico: \u00abnecessary\u00bb lleva una c y dos s.",
+    "Misspelling: \u201coccasion\u201d has one s.": "Error ortogr\u00e1fico: \u00aboccasion\u00bb lleva una s.",
+    "Misspelling: it is \u201cpublicly\u201d.": "Error ortogr\u00e1fico: es \u00abpublicly\u00bb.",
+    "Misspelling: \u201cuntil\u201d has one l.": "Error ortogr\u00e1fico: \u00abuntil\u00bb lleva una l.",
+    "Misspelling: it is \u201cwhich\u201d.": "Error ortogr\u00e1fico: es \u00abwhich\u00bb.",
+    "Misspelling: it is \u201csiege\u201d.": "Error ortogr\u00e1fico: es \u00absiege\u00bb.",
+    "Slang: write \u201cbecause\u201d in full.": "Jerga: escribe \u00abbecause\u00bb completo.",
+    "Slang: write \u201clet me\u201d in full.": "Jerga: escribe \u00ablet me\u00bb completo.",
+    "Slang: write \u201cdo not know\u201d in full.": "Jerga: escribe \u00abdo not know\u00bb completo.",
+    "Slang: write \u201cgovernment\u201d in full.": "Jerga: escribe \u00abgovernment\u00bb completo.",
+    "Misspelling: it is \u201cthe\u201d.": "Error ortogr\u00e1fico: es \u00abthe\u00bb.",
+    "Misspelling: \u201coccurred\u201d has two c\u2019s and two r\u2019s.": "Error ortogr\u00e1fico: \u00aboccurred\u00bb lleva dos c y dos r.",
+    "Misspelling: \u201cenvironment\u201d has an n before the m.": "Error ortogr\u00e1fico: \u00abenvironment\u00bb lleva n antes de m.",
+    "Misspelling: \u201caccommodate\u201d has two c\u2019s and two m\u2019s.": "Error ortogr\u00e1fico: \u00abaccommodate\u00bb lleva dos c y dos m.",
+    "Misspelling: it is \u201cexistence\u201d.": "Error ortogr\u00e1fico: es \u00abexistence\u00bb.",
+    "Misspelling: it is \u201cindependent\u201d.": "Error ortogr\u00e1fico: es \u00abindependent\u00bb.",
+    "Misspelling: \u201ctomorrow\u201d has one m and two r\u2019s.": "Error ortogr\u00e1fico: \u00abtomorrow\u00bb lleva una m y dos r.",
+    "Misspelling: it is \u201ccitizen\u201d.": "Error ortogr\u00e1fico: es \u00abcitizen\u00bb.",
+    "Spelling: write \u201cdon\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abdon\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201ccan\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abcan\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201cwon\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abwon\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201cisn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abisn\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201cdidn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abdidn\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201cdoesn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abdoesn\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201ccouldn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abcouldn\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201cshouldn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abshouldn\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201cwouldn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abwouldn\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201chaven\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abhaven\u2019t\u00bb con ap\u00f3strofo.",
+    "Spelling: write \u201chasn\u2019t\u201d with an apostrophe.": "Ortograf\u00eda: escribe \u00abhasn\u2019t\u00bb con ap\u00f3strofo.",
+    "Capitalization: the word \u201cI\u201d is always capitalized.": "May\u00fasculas: la palabra \u00abI\u00bb siempre va en may\u00fascula.",
+    "Slang: write \u201cyour\u201d in full.": "Jerga: escribe \u00abyour\u00bb completo.",
+    "Slang: write \u201cyou\u201d in full.": "Jerga: escribe \u00abyou\u00bb completo.",
+    "Slang: use \u201creally\u201d in a formal address.": "Jerga: usa \u00abreally\u00bb en un discurso formal.",
+    "Slang: write \u201cright now\u201d in full.": "Jerga: escribe \u00abright now\u00bb completo.",
+    "Capitalization: begin with a capital letter.": "May\u00fasculas: comienza con may\u00fascula.",
+    "Capitalization: begin the sentence with a capital letter.": "May\u00fasculas: comienza la oraci\u00f3n con may\u00fascula."
+  };
+  var TOPIC_ES = {
+    "Healthcare": "Salud",
+    "Public Health": "Salud p\u00fablica",
+    "Education": "Educaci\u00f3n",
+    "Infrastructure": "Infraestructura",
+    "Transportation": "Transporte",
+    "Public Safety": "Seguridad p\u00fablica",
+    "Housing": "Vivienda",
+    "Economy": "Econom\u00eda",
+    "Technology": "Tecnolog\u00eda",
+    "Civic Process": "Proceso c\u00edvico",
+    "Environment": "Medio ambiente"
+  };
+  var STATUS_ES = {
+    "Answered": "Respondida",
+    "Action Promised": "Acci\u00f3n prometida",
+    "In Progress": "En curso",
+    "Resolved": "Resuelta",
+    "No Action": "Sin acci\u00f3n"
+  };
+  function current() {
+    try {
+      var v = window.localStorage.getItem(LANG_KEY);
+      if (v === "es" || v === "en") return v;
+    } catch (e) { /* private mode: fall through to browser default */ }
+    try {
+      var n = window.navigator && window.navigator.language ? window.navigator.language : "";
+      if (/^es/i.test(n)) return "es";
+    } catch (e2) { /* default below */ }
+    return "en";
+  }
+  var lang = current();
+  function t(id) {
+    var e = TABLE[id];
+    if (!e) return id;
+    return (lang === "es" && e.es) ? e.es : e.en;
+  }
+  function tf(id, map) {
+    var s = t(id);
+    if (map) Object.keys(map).forEach(function (k) { s = s.split("{" + k + "}").join(String(map[k])); });
+    return s;
+  }
+  function tes(reason) {
+    if (lang !== "es") return reason;
+    return REASON_ES[reason] || reason;
+  }
+  function topicEs(topic) {
+    if (lang !== "es") return topic;
+    return TOPIC_ES[topic] || topic;
+  }
+  function statusEs(st) {
+    if (lang !== "es") return st;
+    return STATUS_ES[st] || st;
+  }
+  function set(l) {
+    lang = (l === "es") ? "es" : "en";
+    try { window.localStorage.setItem(LANG_KEY, lang); } catch (e) { /* session-only */ }
+  }
+  function get() { return lang; }
+  function sync() { lang = current(); return lang; }
+  return { LANG_KEY: LANG_KEY, t: t, tf: tf, tes: tes, topicEs: topicEs, statusEs: statusEs, set: set, get: get, sync: sync };
+})();

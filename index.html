@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Podium 1.0 — A Civic Portal</title>
+<meta name="description" content="Citizens post ideas and concerns. The community votes. Each week the top-voted post plus one randomly drawn post are read aloud verbatim and addressed in a public briefing.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main" id="skipLink">Skip to main content</a>
+
+<div class="gov-banner"><div class="wrap"><span class="flag-mark" aria-hidden="true"></span><span><span id="govText">An official website of the United States government</span> <span class="how-you-know" id="govHow">Here&rsquo;s how you know.</span></span></div></div>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">&#9673;</span>
+      <div>
+        <h1 class="brand-title">THE PODIUM 1.0</h1>
+      </div>
+    </div>
+    <div class="citizen-box">
+      <span class="citizen-chip" id="citizenChip">Not signed in</span>
+
+      <label id="citizenStateWrap" hidden><span id="citizenStateLabel">State</span>
+        <select id="citizenStateSel" aria-label="Your state" title="Optional: your stated state, stored on this device only."></select>
+      </label>
+      <label id="langWrap"><span id="langLabel">Language</span>
+        <select id="langSel" aria-label="Language"><option value="en">English</option><option value="es">Espa&ntilde;ol</option></select>
+      </label>
+    </div>
+  </div>
+  <p class="wrap brand-sub" id="brandSub">The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation.</p>
+  <nav class="wrap main-nav" aria-label="Primary" id="mainNav">
+    <button type="button" class="tab is-active" data-view="feed" aria-current="page">Live Feed</button>
+    <button type="button" class="tab" data-view="briefing">The Weekly Briefing</button>
+    <button type="button" class="tab" data-view="prior">Prior Posts &amp; Answers</button>
+    <button type="button" class="tab" data-view="status">Status Updates</button>
+    <button type="button" class="tab" data-view="watch">Watch Live <span class="tab-live" id="watchTabLive" hidden>LIVE</span></button>
+    <button type="button" class="tab" data-view="post">Submit Post</button>
+  </nav>
+</header>
+
+<main id="main" class="wrap">
+
+  <!-- THE VERBATIM RULE: shown at top of home page and above the composer -->
+  <section class="rule-card" id="ruleCard" aria-labelledby="ruleHeading">
+    <h2 id="ruleHeading">The Verbatim Rule</h2>
+    <p id="ruleP1">By the rules of this portal, the highest-voted post <strong>MUST</strong> be read aloud &mdash; word for word, exactly as its author wrote it &mdash; and discussed, by a representative of the United States, in front of the entire country. Another post, drawn at random, must be read and discussed the same way.</p>
+    <p id="ruleP2">AI will be used to detect profanity and errors, correct grammar, and suggest clearer formatting. It will never steer you: your topic, your position, or your meaning. And once your post is published, it is final.</p>
+    <p id="ruleP3">Keep in mind that your post may be read in front of the entire nation. Write in your most professional manner. Profanity, slang, and ridicule will not post. State your idea or concern plainly and professionally. You are not posting a comment. You are addressing the nation &mdash; speaking to and for every American. Give it the seriousness it deserves.</p>
+    <details class="fine-print">
+      <summary id="fineSummary">Fine print (official register)</summary>
+      <p class="fine-print-lede" id="fineLede">All submissions are subject to automated pre-publication review. Submissions containing profanity, slurs, or personal attacks shall not be published. Submissions containing slang or errors materially affecting comprehensibility shall be held pending correction by the submitting party, with suggested revisions provided for consideration; no submission shall be altered by the System without the submitting party&rsquo;s express action. Weekly selections shall consist of (i) the submission receiving the highest number of votes during the applicable period and (ii) one (1) submission selected by random drawing from among all eligible published submissions. Selected submissions shall be read aloud in their entirety, verbatim, and discussed in the weekly briefing. A published submission is final and shall not be edited or redacted.</p>
+      <h3 class="statements-heading" id="statementsHeading">Statements of policy, principles, and fundamentals</h3>
+      <p id="finePurpose">The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation. Citizens will address the nation and speak on its behalf.</p>
+      <ul id="fineList">
+        <li>The highest-voted post and one randomly drawn post are read aloud word-for-word, in full, by a U.S. representative and discussed in the weekly briefing. No editor stands between author and nation. Nothing is edited after posting.</li>
+        <li>AI detects problems and suggests wording before publication only. It never steers a post's topic, position, or meaning, and never changes, substitutes, or declines a post on its own.</li>
+        <li>Profanity, slurs, and personal attacks are hard-blocked and never publish. Slang, misspellings, grammar, and unclear text are held with suggested rewording; the author accepts or retypes, and AI never silently changes text. Held drafts are not published, do not enter the draw, and do not use the citizen's one-post slot.</li>
+        <li>Once published, a post is final. It cannot be deleted, withdrawn, archived, or hidden.</li>
+        <li>Voting is upvote-only. One vote per citizen per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET.</li>
+        <li>One post per citizen per weekly cycle.</li>
+        <li>Posts are capped at 630 words.</li>
+        <li>The random draw is rig-proof: the eligible pool is frozen in a fixed published order at the cutoff, and the position is the NIST Randomness Beacon value mod pool size, plus one. The draw is internal only, with no button, replay, or re-roll.</li>
+        <li>The committee prepares answers only. It never alters, substitutes, delays, or declines a selection. It reviews selections a week ahead and routes each answer to the correct branch and level.</li>
+        <li>The committee does not fund. It asks for funds and allocates funds.</li>
+        <li>Committee answers start as AI drafts, reviewed, edited, and approved by a real committee member who is the answerer of record. AI never delivers a final answer alone and never touches a citizen post. The public sees only approved answers.</li>
+        <li>An exact-duplicate post in the same cycle does not create a new post; the citizen is offered an upvote on the existing post, with no post-anyway exit. The draw pool excludes the winner and any post exactly matching the winner. Similar-but-distinct posts are advisory only.</li>
+        <li>The Live Feed shows the current cycle only. Past-cycle posts that were never selected are deleted; selected posts are kept as the briefing record.</li>
+        <li>Posting and voting run Monday 12:00 AM to Sunday 11:59 PM ET. The pool freezes at the Sunday cutoff, the draw is Monday at 12:00 PM ET, the committee has the week plus a Monday-Tuesday buffer, and the briefing airs Wednesdays at 1:00 PM ET as the fixed opening segment.</li>
+        <li>This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay publishes when that briefing airs. Prior Posts &amp; Answers and Status Updates list aired selections only.</li>
+        <li>Sign-in here is a placeholder: this starter runs as a single local profile with no identity verification. Real identity verification is required before production use.</li>
+        <li>Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- ============ FEED ============ -->
+  <section id="view-feed" class="view" aria-label="Feed of citizen posts">
+    <h2 class="sr-only" id="feedHeading">Live Feed</h2>
+    <div class="feed-controls">
+      <div class="subtabs" role="tablist" aria-label="Feed order" id="orderList">
+        <button type="button" class="subtab is-active" data-feed="recent" role="tab" aria-selected="true">Recent</button>
+        <button type="button" class="subtab" data-feed="top" role="tab" aria-selected="false">Top Voted</button>
+        <button type="button" class="subtab" data-feed="needs" role="tab" aria-selected="false">Needs Votes</button>
+        <button type="button" class="subtab" data-feed="discover" role="tab" aria-selected="false">Discover</button>
+      </div>
+      <div class="feed-filters">
+        <label class="filter-label" id="topicFilterWrap"><span id="topicFilterLabel">Topic</span>
+          <select id="topicFilter"></select>
+        </label>
+        <label class="filter-label" id="searchWrap"><span id="searchLabel">Keyword search</span>
+          <input type="search" id="searchInput" placeholder="e.g. bridges, school lunches" autocomplete="off">
+        </label>
+        <label class="filter-label" id="pageSizeWrap"><span id="pageSizeLabel">Per page</span>
+          <select id="pageSizeSel">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+      </div>
+      <div class="topic-list" id="topicList" aria-label="Filter by topic"></div>
+      <p class="hint" id="voteRule">One vote per citizen per week. You can change it until voting closes Sunday at 11:59 PM ET.</p>
+    </div>
+    <p class="feed-note" id="feedNote"></p>
+    <ol class="post-list" id="postList"></ol>
+    <div class="pager" id="feedPager" hidden>
+      <button type="button" class="btn btn-small" id="prevPage">&#8592; Prev</button>
+      <span class="hint" id="pageInfo" aria-live="polite">Page 1 of 1</span>
+      <button type="button" class="btn btn-small" id="nextPage">Next &#8594;</button>
+    </div>
+  </section>
+
+  <!-- ============ COMPOSER ============ -->
+  <section id="view-post" class="view" hidden aria-label="Post composer">
+    <h2 class="sr-only" id="postHeading">Submit Post</h2>
+    <div class="mini-rule" role="note" aria-label="Reminder of the rule" id="miniRule">
+      <strong id="miniRuleStrong">The Verbatim Rule applies.</strong> <span id="miniRuleText">Your post may be read aloud, word for word, in front of the entire nation. Profanity, slang, and ridicule will not post. Once published, it is final.</span>
+      <a href="#ruleCard" id="readFullRule">Read the full rule</a>
+    </div>
+    <div id="onePostNotice" class="notice" hidden></div>
+    <form id="composerForm" novalidate>
+      <div class="composer-row">
+        <div class="field">
+          <label for="composerTopic"><span id="composerTopicLabel">Topic</span> <span class="hint" id="composerTopicHint">Pick a topic, or accept the single AI suggestion at review.</span></label>
+          <select id="composerTopic"></select>
+        </div>
+        <div class="field timer-field">
+          <span class="timer" id="readTimer">read-aloud time &#8776; 0:00 of 4:30</span>
+          <span class="hint" id="timerHint">read-aloud time &middot; max 630 words</span>
+          <span class="ai-mode" id="aiMode">AI: local fallback</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="composerText" id="composerTextLabel">Your address to the nation</label>
+        <textarea id="composerText" rows="8" maxlength="9000" placeholder="State your idea or concern plainly and professionally&hellip;" aria-describedby="gateMessages voicedPanel"></textarea>
+      </div>
+      <div id="gateMessages" aria-live="polite"></div>
+      <div id="softFlags"></div>
+      <div id="clarityPanel" hidden></div>
+      <aside id="voicedPanel" class="voiced" hidden aria-live="polite"></aside>
+      <div class="composer-actions">
+        <button type="button" class="btn btn-secondary" id="previewBtn">Hear it as the nation will</button>
+        <button type="button" class="btn btn-secondary" id="hearDraftBtn">Hear this draft</button>
+        <button type="submit" class="btn btn-primary" id="publishBtn">Publish (final)</button>
+      </div>
+      <p class="hint" id="publishNote">Publishing is final: posts cannot be edited or redacted. The AI checks wording only &mdash; never your topic, position, or meaning.</p>
+    </form>
+  </section>
+
+  <!-- ============ BRIEFING ============ -->
+  <section id="view-briefing" class="view" hidden aria-label="Weekly briefing">
+    <h2 id="briefingTitle">This week&rsquo;s briefing</h2>
+    <p class="lede" id="briefingLede1">Two posts take the majority of the segment: the highest-voted post and one post drawn at random. Both are read aloud verbatim and answered. Follow-ups on earlier posts get only a brief live mention; the full record lives under Prior Posts &amp; Answers and Status Updates.</p>
+    <p class="lede" id="briefingLede2">The locked weekly schedule (all times ET): posting and voting week Monday 00:00 &#8594; Sunday 23:59; cutoff Sunday 23:59, when the eligible pool is frozen and published; draw Monday 12:00, pre-announced; committee week Monday &#8594; Sunday to evaluate both selected posts and formulate both answers — answers ONLY, it can never alter, substitute, delay, or decline a selection; briefing Wednesday 1:00 PM. The Podium segment is the fixed opening segment of the Wednesday briefing: if no regular briefing is scheduled that Wednesday, the segment still runs standalone at the same time, same room, same cameras.</p>
+    <p><button type="button" class="btn btn-small" id="gotoWatchBtn">Watch Live &#8594;</button> <span class="hint" id="gotoWatchHint">Attend the airing of this briefing.</span></p>
+
+    <ol class="pipeline" id="pipelineList"></ol>
+
+    <section id="nextSection" aria-labelledby="nextHeading">
+      <h3 id="nextHeading">Next Week</h3>
+      <p class="hint" id="nextHint">Selected posts in committee review. Answers are still being formulated — never presented as final. These selections are published after the Monday draw, once the draw has selected the posts: the full posts for the next briefing appear here from the draw onward, in full, with answers coming on the briefing date.</p>
+      <ul id="nextList" class="next-list"></ul>
+    </section>
+
+
+    <section class="card" aria-labelledby="drawHeading">
+      <h3 id="drawHeading">The random draw &mdash; verifiably fair</h3>
+      <p id="drawLede">The eligible pool is frozen and published <em>first</em> (all gate-passed posts since the last draw, minus the top-voted winner). The system runs the draw at the pre-announced time: <code>position = beacon value mod pool size + 1</code>. Random selection conducted using the NIST Randomness Beacon.</p>
+      <dl class="draw-facts" id="drawFacts"></dl>
+      <h4 id="excludedHeading">Excluded from the pool</h4>
+      <ul id="excludedList" class="excluded-list"></ul>
+      <p class="hint" id="drawReadonly">Read-only record: pool size, beacon timestamp and value, computed position, and the drawn post. The draw is an internal system function — nothing here re-runs it.</p>
+      <h4 id="workedHeading">Worked example</h4>
+      <p class="worked" id="workedBody">Pool of 12, beacon value ending &hellip;4839 &rarr; 4839 mod 12 = 3 &rarr; +1 = <strong>post #4</strong>.</p>
+      <p class="hint" id="committeeRule">Committee rule: the committee prepares answers ONLY. It can never alter, substitute, delay, or decline a selected post. It has one week to formulate an answer and route the topic to the right branch or level of government.</p>
+    </section>
+
+  </section>
+
+  <!-- ============ WATCH LIVE ============ -->
+  <section id="view-watch" class="view" hidden aria-label="Watch live broadcast">
+    <h2 id="watchHeading">Watch Live</h2>
+    <p class="lede" id="watchLede">Attend the weekly briefing broadcast. The Weekly Briefing tab holds the record of what was and will be discussed; this tab is the airing itself.</p>
+    <div id="watchMain"></div>
+    <section aria-labelledby="watchLibraryHeading" id="watchLibrarySection">
+      <h3 id="watchLibraryHeading">Pre-recorded screenings</h3>
+      <ul id="watchLibrary" class="watch-library"></ul>
+    </section>
+    <p><button type="button" class="btn btn-small" id="backToBriefingBtn">&#8592; Briefing record</button></p>
+
+  </section>
+
+  <!-- ============ PRIOR POSTS & ANSWERS ============ -->
+  <section id="view-prior" class="view" hidden aria-label="Prior posts and answers archive">
+    <h2 id="priorHeading">Prior Posts &amp; Answers</h2>
+    <p class="lede" id="priorLede">The archive of past briefing selections: each item shows the original post, verbatim, plus the committee&rsquo;s answer. Check anytime &mdash; this is not part of the live show.</p>
+    <label class="filter-label"><span id="priorSelectedLabel">Selected post</span>
+      <select id="priorSelect"></select>
+    </label>
+    <article class="card" id="priorCard"></article>
+  </section>
+
+  <!-- ============ STATUS UPDATES ============ -->
+  <section id="view-status" class="view" hidden aria-label="Status updates follow-through record">
+    <h2 id="statusHeading">Status Updates</h2>
+    <p class="lede" id="statusLede">The follow-through record: each item shows the dated progress updates plus the current status. Check anytime &mdash; this is not part of the live show.</p>
+    <label class="filter-label"><span id="statusSelectedLabel">Selected post</span>
+      <select id="statusSelect"></select>
+    </label>
+    <article class="card" id="statusCard"></article>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-cols">
+    <div class="footer-col">
+      <h2 id="footerAbout">About</h2>
+      <p id="footerAboutText">The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation.</p>
+    </div>
+    <div class="footer-col">
+      <h2 id="footerProcess">The Process</h2>
+      <p id="footerProcessChain">Live Feed &#8594; The Weekly Briefing &#8594; Prior Posts &amp; Answers &#8594; Status Updates &#8594; Watch Live &#8594; Submit Post</p>
+    </div>
+    <div class="footer-col">
+      <h2 id="footerNotices">Notices</h2>
+      <p id="footerStarterNotice"><strong>Starter notice:</strong> sign-in is a placeholder; no real personal data is collected, requested, or stored. AI checks run locally until a Model API key is provided for the session. This starter ships with no users, posts, answers, or updates.</p>
+    </div>
+  </div>
+  <div class="wrap key-row">
+    <label for="apiKeyInput"><span id="apiKeyLabel">Model API key</span> <span class="hint" id="apiKeyHint">(session only — kept in sessionStorage, cleared when the tab closes; never committed)</span></label>
+    <input type="password" id="apiKeyInput" autocomplete="off" placeholder="Paste key for this session">
+    <button type="button" class="btn btn-small" id="apiKeySave">Save key</button>
+    <button type="button" class="btn btn-small" id="apiKeyClear">Clear</button>
+  </div>
+</footer>
+
+<!-- Preview modal -->
+<div class="modal-backdrop" id="previewModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+    <h3 id="previewTitle">Weekly briefing &mdash; verbatim reading</h3>
+
+    <p class="hint" id="previewMeta"></p>
+    <p class="hint" id="previewTopic" hidden></p>
+    <blockquote class="verbatim" id="previewBody"></blockquote>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="previewClose">Back to editing</button>
+      <button type="button" class="btn btn-primary" id="previewPublish">Publish (final)</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="js/seed.js"></script>
+<script src="js/ai-adapter.js"></script>
+<script src="js/store.js"></script>
+<script src="js/strings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
+
