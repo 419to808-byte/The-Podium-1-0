@@ -35,6 +35,24 @@ var PodiumStrings = (function () {
     "tab.status": { en: "Status Updates", es: "Actualizaciones de estado" },
     "tab.watch": { en: "Watch Live", es: "Ver en vivo" },
     "tab.post": { en: "Submit Post", es: "Enviar publicaci\u00f3n" },
+    "tab.committee": { en: "Committee", es: "Comit\u00e9" },
+    "committee.aria": { en: "Citizen committee roster", es: "Lista del comit\u00e9 ciudadano" },
+    "committee.lede": { en: "The committee is 12 ordinary verified citizens, chosen by random draw, serving 12-week terms, with one new citizen joining every week. The committee reviews and approves answers, follows through until the issue is resolved, and does not fund \u2014 it asks for and allocates funds.", es: "El comit\u00e9 est\u00e1 formado por 12 ciudadanos verificados comunes, elegidos por sorteo aleatorio, con mandatos de 12 semanas; cada semana se incorpora un ciudadano nuevo. El comit\u00e9 revisa y aprueba las respuestas, hace seguimiento hasta que el asunto se resuelve, y no financia \u2014 pide fondos y los asigna." },
+    "committee.empty": { en: "No committee members yet. The first members will be drawn by random draw once verified citizens agree to serve.", es: "A\u00fan no hay miembros del comit\u00e9. Los primeros miembros ser\u00e1n elegidos por sorteo aleatorio cuando haya ciudadanos verificados dispuestos a servir." },
+    "committee.week": { en: "Week {n} of 12", es: "Semana {n} de 12" },
+    "committee.terms": { en: "Term start: {start} \u00b7 Cycles out: {out}", es: "Inicio del mandato: {start} \u00b7 Termina: {out}" },
+    "committee.joined": { en: "Joined this week", es: "Se uni\u00f3 esta semana" },
+    "committee.cycling": { en: "Cycles out next week", es: "Termina la pr\u00f3xima semana" },
+    "committee.draw": { en: "Selected by random draw", es: "Seleccionado por sorteo aleatorio" },
+    "committee.draw.beacon": { en: "Beacon timestamp", es: "Marca de tiempo del faro" },
+    "committee.draw.value": { en: "Beacon value", es: "Valor del faro" },
+    "committee.draw.pool": { en: "Pool size", es: "Tama\u00f1o del grupo" },
+    "committee.draw.pos": { en: "Draw position", es: "Posici\u00f3n del sorteo" },
+    "approver.prefix": { en: "Reviewed and approved by", es: "Revisado y aprobado por" },
+    "approver.suffix": { en: "civilian committee member, Week {week} of 12", es: "miembro civil del comit\u00e9, semana {week} de 12" },
+    "approver.none": { en: "No committee member is serving yet.", es: "A\u00fan no hay ning\u00fan miembro del comit\u00e9 en funciones." },
+    "approver.notserving": { en: "Only a serving committee member can approve answers.", es: "Solo un miembro del comit\u00e9 en funciones puede aprobar respuestas." },
+    "committee.note": { en: "One citizen cycles out and one new citizen joins every week, so the committee is always 12 people with a mix of experience.", es: "Cada semana un ciudadano termina su mandato y uno nuevo se incorpora, de modo que el comit\u00e9 siempre tiene 12 personas con una mezcla de experiencia." },
     "tab.watchlive.badge": { en: "LIVE", es: "EN VIVO" },
     "tab.watchlive.airing": { en: "Watch Live, briefing on air now", es: "Ver en vivo, sesi\u00f3n en directo ahora" },
     "nav.primary": { en: "Primary", es: "Principal" },
@@ -44,6 +62,7 @@ var PodiumStrings = (function () {
     "rule.p1": { en: "By the rules of this portal, the highest-voted post <strong>MUST</strong> be read aloud \u2014 word for word, exactly as its author wrote it \u2014 and discussed, by a representative of the United States, in front of the entire country. Another post, drawn at random, must be read and discussed the same way.", es: "Seg\u00fan las reglas de este portal, la publicaci\u00f3n m\u00e1s votada <strong>DEBE</strong> leerse en voz alta \u2014 palabra por palabra, exactamente como la escribi\u00f3 su autor \u2014 y debatirse, por un representante de los Estados Unidos, frente a todo el pa\u00eds. Otra publicaci\u00f3n, elegida al azar, debe leerse y debatirse de la misma manera." },
     "rule.p2": { en: "AI will be used to detect profanity and errors, correct grammar, and suggest clearer formatting. It will never steer you: your topic, your position, or your meaning. And once your post is published, it is final.", es: "La IA se usar\u00e1 para detectar blasfemias y errores, corregir la gram\u00e1tica y sugerir un formato m\u00e1s claro. Nunca te dirigir\u00e1: ni tu tema, ni tu posici\u00f3n, ni tu significado. Y una vez publicada tu publicaci\u00f3n, es definitiva." },
     "rule.p3": { en: "Keep in mind that your post may be read in front of the entire nation. Write in your most professional manner. Profanity, slang, and ridicule will not post. State your idea or concern plainly and professionally. You are not posting a comment. You are addressing the nation \u2014 speaking to and for every American. Give it the seriousness it deserves.", es: "Ten en cuenta que tu publicaci\u00f3n puede leerse frente a toda la naci\u00f3n. Escribe de la manera m\u00e1s profesional. Las blasfemias, la jerga y la burla no se publicar\u00e1n. Exp\u00f3n tu idea o inquietud de forma clara y profesional. No est\u00e1s publicando un comentario. Te diriges a la naci\u00f3n \u2014 hablando a y por cada estadounidense. Dale la seriedad que merece." },
+    "rule.p4": { en: "Even if the committee cannot resolve an issue, it has at least brought light to the concern. That is the bare essential of this platform: to shine a light on concerns and ideas, and to try to resolve them or implement helpful changes.", es: "Incluso si el comité no puede resolver un problema, al menos habrá arrojado luz sobre la inquietud. Esa es la esencia básica de esta plataforma: arrojar luz sobre las inquietudes y las ideas, y tratar de resolverlas o implementar cambios útiles." },
     "rule.readfull": { en: "Read the full rule", es: "Leer la regla completa" },
     /* fine print */
     "fine.summary": { en: "Fine print (official register)", es: "Letra peque\u00f1a (registro oficial)" },
@@ -281,12 +300,53 @@ var PodiumStrings = (function () {
     "wonder.drafting": { en: "Drafting with Muse Wonder ({model})...", es: "Redactando con Muse Wonder ({model})..." },
     "wonder.unavailable": { en: "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.", es: "Muse Wonder no est\u00e1 disponible (sin clave de sesi\u00f3n, o la llamada fall\u00f3) \u2014 no hay borrador disponible. Las respuestas nunca son redactadas por Spark." },
     "wonder.approved": { en: "Approved by committee", es: "Aprobada por el comit\u00e9" },
+    "cite.legend": { en: "Citations", es: "Citas" },
+    "cite.commitment": { en: "Commitment", es: "Compromiso" },
+    "cite.source": { en: "Source", es: "Fuente" },
+    "cite.add": { en: "Add citation", es: "A\u00f1adir cita" },
+    "cite.remove": { en: "Remove", es: "Quitar" },
+    "cite.nocommit": { en: "No commitments in this answer", es: "Esta respuesta no contiene compromisos" },
+    "cite.required": { en: "Citations are required \u2014 add one citation per commitment, or mark \u201cNo commitments in this answer\u201d.", es: "Se requieren citas: a\u00f1ade una cita por compromiso o marca \u00abEsta respuesta no contiene compromisos\u00bb." },
+    "cite.commitment.ph": { en: "Short quote of the commitment\u2026", es: "Cita breve del compromiso\u2026" },
+    "cite.source.ph": { en: "Agency or authority\u2026", es: "Agencia o autoridad\u2026" },
+    "cite.date": { en: "Date", es: "Fecha" },
+    "cite.date.ph": { en: "Date (e.g. Oct 28, 2026)", es: "Fecha (p. ej. 28 de oct. de 2026)" },
     /* prior + status */
     "prior.aria": { en: "Prior posts and answers archive", es: "Archivo de publicaciones y respuestas anteriores" },
     "prior.lede": { en: "The archive of past briefing selections: each item shows the original post, verbatim, plus the committee\u2019s answer. Check anytime \u2014 this is not part of the live show.", es: "El archivo de selecciones de sesiones pasadas: cada elemento muestra la publicaci\u00f3n original, textual, m\u00e1s la respuesta del comit\u00e9. Consulta cuando quieras \u2014 esto no es parte del programa en directo." },
     "thread.selected": { en: "Selected post", es: "Publicaci\u00f3n seleccionada" },
     "prior.updatelatest": { en: "Most recent update", es: "Actualizaci\u00f3n m\u00e1s reciente" },
     "prior.status": { en: "Status:", es: "Estado:" },
+    "noaction.label": { en: "We can't do this.", es: "We can't do this." },
+    "noaction.authority": { en: "Cited authority", es: "Autoridad citada" },
+    "noaction.change": { en: "What would need to change", es: "Qué tendría que cambiar" },
+    "noaction.redirect": { en: "Who can do it instead", es: "Quién puede hacerlo en su lugar" },
+    "noaction.vote": { en: "Decided by committee vote", es: "Decidido por votación del comité" },
+    "noaction.authority.required": { en: "A cited authority is required — name the regulation, statute, budget line, or jurisdiction.", es: "Se requiere una autoridad citada: nombra el reglamento, la ley, la partida presupuestaria o la jurisdicción." },
+    "form.required": { en: "This field is required.", es: "Este campo es obligatorio." },
+    "appeal.button": { en: "I don't think this is right — appeal.", es: "Creo que esto no está bien — apelar." },
+    "appeal.by": { en: "Appeal by {name} on {date}", es: "Apelación de {name} el {date}" },
+    "appeal.awaiting": { en: "Awaiting committee re-review", es: "En espera de revisión del comité" },
+    "rereview.legend": { en: "Committee re-review", es: "Revisión del comité" },
+    "rereview.uphold": { en: "Uphold appeal — back under review", es: "Aceptar apelación — vuelve a revisión" },
+    "rereview.reject": { en: "Reject appeal — determination stands", es: "Rechazar apelación — la determinación se mantiene" },
+    "rereview.outcome.upheld": { en: "Appeal upheld — back under review", es: "Apelación aceptada — vuelve a revisión" },
+    "rereview.outcome.rejected": { en: "Appeal rejected — determination stands", es: "Apelación rechazada — la determinación se mantiene" },
+    "rereview.note.ph": { en: "Re-review note (optional)", es: "Nota de revisión (opcional)" },
+    "challenge.legend": { en: "Why can't we do this? — committee challenges", es: "¿Por qué no podemos hacer esto? — desafíos del comité" },
+    "challenge.name": { en: "Why can't we do this?", es: "¿Por qué no podemos hacer esto?" },
+    "challenge.raise": { en: "Raise challenge", es: "Plantear un desafío" },
+    "challenge.solution.label": { en: "Solution already mapped out", es: "Solución ya elaborada" },
+    "challenge.solution.ph": { en: "Summarize the mapped-out solution…", es: "Resume la solución ya elaborada…" },
+    "challenge.by": { en: "Challenged by {name} on {date}", es: "Desafío de {name} el {date}" },
+    "challenge.awaiting": { en: "Awaiting government answer", es: "En espera de la respuesta del gobierno" },
+    "challenge.answer.legend": { en: "Government answer", es: "Respuesta del gobierno" },
+    "challenge.answer.ph": { en: "The government's specific answer…", es: "La respuesta específica del gobierno…" },
+    "challenge.answer.submit": { en: "Record government answer", es: "Registrar respuesta del gobierno" },
+    "response.legend": { en: "Citizen response", es: "Respuesta ciudadana" },
+    "response.submit": { en: "Respond", es: "Responder" },
+    "response.ph": { en: "Write your response…", es: "Escribe tu respuesta…" },
+    "response.done": { en: "You already responded here.", es: "Ya respondiste aquí." },
     "prior.tostatus": { en: "Status updates for {ref} \u2192", es: "Actualizaciones de estado de {ref} \u2192" },
     "status.aria": { en: "Status updates follow-through record", es: "Registro de seguimiento de actualizaciones de estado" },
     "status.lede": { en: "The follow-through record: each item shows the dated progress updates plus the current status. Check anytime \u2014 this is not part of the live show.", es: "El registro de seguimiento: cada elemento muestra las actualizaciones de progreso fechadas m\u00e1s el estado actual. Consulta cuando quieras \u2014 esto no es parte del programa en directo." },
@@ -427,7 +487,7 @@ var PodiumStrings = (function () {
     "Action Promised": "Acci\u00f3n prometida",
     "In Progress": "En curso",
     "Resolved": "Resuelta",
-    "No Action": "Sin acci\u00f3n"
+    "No Action": "We can't do this."
   };
   function current() {
     try {
@@ -459,9 +519,12 @@ var PodiumStrings = (function () {
     if (lang !== "es") return topic;
     return TOPIC_ES[topic] || topic;
   }
+  var STATUS_EN = {
+    "No Action": "We can't do this."
+  };
   function statusEs(st) {
-    if (lang !== "es") return st;
-    return STATUS_ES[st] || st;
+    if (lang === "es") return STATUS_ES[st] || st;
+    return STATUS_EN[st] || st;
   }
   function set(l) {
     lang = (l === "es") ? "es" : "en";

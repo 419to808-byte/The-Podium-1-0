@@ -5,6 +5,33 @@ var PodiumStore = (function () {
 
   var KEY = "podium1.v1";
 
+  /* Civilian committee store (TY): members serving 12-week terms, drawn by
+     random draw. Own key - never shares the demo keys or the main save.
+     Missing or corrupt payloads yield an empty roster (corrupt bytes are
+     preserved under a backup key); other stored data is never touched. */
+  var COMMITTEE_KEY = "podium1.committee.v1";
+  var COMMITTEE_MAX = 12, COMMITTEE_TERMS = 12;
+  function blankCommittee() { return { members: [], maxSize: COMMITTEE_MAX, termWeeks: COMMITTEE_TERMS }; }
+  function loadCommittee() {
+    var raw = null;
+    try {
+      raw = window.localStorage.getItem(COMMITTEE_KEY);
+      if (!raw) return blankCommittee();
+      var c = JSON.parse(raw);
+      if (!c || !Array.isArray(c.members)) throw new Error("bad shape");
+      c.members = c.members.slice(0, COMMITTEE_MAX);
+      c.maxSize = COMMITTEE_MAX;
+      c.termWeeks = COMMITTEE_TERMS;
+      return c;
+    } catch (e) {
+      if (raw) { try { window.localStorage.setItem(COMMITTEE_KEY + ".bak", raw); } catch (e2) {} }
+      return blankCommittee();
+    }
+  }
+  function saveCommittee(c) {
+    try { window.localStorage.setItem(COMMITTEE_KEY, JSON.stringify(c || blankCommittee())); } catch (e) { /* private mode */ }
+  }
+
   /* Current voting cycle follows the calendar date (cycle rollover):
      the cycle whose voting window contains today's ET date (inclusive).
      Past all windows, the latest started cycle (the feed never empties);
@@ -313,6 +340,185 @@ var PodiumStore = (function () {
     try { window.localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private mode: session-only */ }
   }
 
+  /* ---- Civilian committee draw + weekly rotation (TY) ----
+   Beacon rule (same as the post draw): position = beaconNum mod poolSize + 1
+   over the ordered eligible pool. Deterministic: the same beacon value over
+   the same ordered pool always selects the same citizen - anyone can replay
+   it from the recorded beaconValue, poolSize, and declines list.
+   There is deliberately NO Math.random anywhere in this file: if the NIST
+   beacon is unavailable the draw is recorded as failed/pending and no
+   member is added. */
+  var NIST_BEACON_URL = "https://beacon.nist.gov/beacon/2.0/pulse/last";
+  var BEACON_TIMEOUT_MS = 10000;
+  var WD_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  function isoDay(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function fmtDay(d) { return WD_SHORT[d.getDay()] + " " + ET_MONTHS[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear(); }
+  function addDaysISO(iso, n) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); if (!m) return ""; var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])); d.setDate(d.getDate() + n); return isoDay(d); }
+  function mondayOfWeek(d) { var m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; }
+  /* Fetch the latest NIST beacon pulse. Resolves {ok:true, beaconTimestamp
+     (the pulse's own ISO timestamp), beaconValue (full hex outputValue),
+     beaconNum (numeric excerpt: last 12 hex chars, safely below 2^53)} or
+     {ok:false, reason}. Never throws, never falls back to local randomness. */
+  function fetchCommitteeBeacon(url, timeoutMs) {
+    var u = url || NIST_BEACON_URL;
+    var ms = (typeof timeoutMs === "number" && timeoutMs > 0) ? timeoutMs : BEACON_TIMEOUT_MS;
+    function fail(reason) { return { ok: false, reason: reason }; }
+    try {
+      if (typeof window.fetch !== "function") return Promise.resolve(fail("no-fetch"));
+      var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+      var timer = setTimeout(function () { if (ctrl) { try { ctrl.abort(); } catch (e) {} } }, ms);
+      var opts = ctrl ? { signal: ctrl.signal } : {};
+      return window.fetch(u, opts).then(function (r) {
+        clearTimeout(timer);
+        if (!r || !r.ok) return fail("bad-status");
+        return r.json().then(function (j) {
+          var p = (j && (j.pulse || j)) || {};
+          var hex = String(p.outputValue || "");
+          if (!/^[0-9a-fA-F]+$/.test(hex)) return fail("bad-value");
+          var num = parseInt(hex.slice(-12), 16);
+          if (isNaN(num)) return fail("bad-value");
+          return { ok: true, beaconTimestamp: String(p.timeStamp || ""), beaconValue: hex.toLowerCase(), beaconNum: num };
+        }, function () { return fail("bad-json"); });
+      }, function () { clearTimeout(timer); return fail("fetch-failed"); });
+    } catch (e) { return Promise.resolve(fail("fetch-error")); }
+  }
+  /* Eligibility for the committee draw. Citizen flags (set when a citizen agrees
+     to serve): verified, agreedToServe, declined (declines the drawn seat when
+     true - the draw skips past them), govEmployee, isFelon, age. Unknown age /
+     employee / felon status passes here; agreement-time verification owns those
+     gates. ctx: {cycleId, posts, members, pastMembers, mondayISO}. */
+  function committeeEligible(c, ctx) {
+    if (!c) return false;
+    if (c.verified !== true) return false;
+    if (c.agreedToServe !== true) return false;
+    if (typeof c.age === "number" && c.age < 18) return false;
+    if (c.govEmployee === true) return false;
+    if (c.isFelon === true) return false;
+    var i, members = (ctx && ctx.members) || [], posts = (ctx && ctx.posts) || [];
+    for (i = 0; i < members.length; i++) { if (members[i] && members[i].id === c.id) return false; }
+    for (i = 0; i < posts.length; i++) {
+      if (posts[i] && posts[i].authorId === c.id && posts[i].cycleId === (ctx && ctx.cycleId)) return false;
+    }
+    var past = (ctx && ctx.pastMembers) || [], cutoff = ctx && ctx.mondayISO;
+    if (cutoff) {
+      for (i = 0; i < past.length; i++) {
+        var e = past[i];
+        if (e && e.id === c.id && e.termEndISO && e.termEndISO > addDaysISO(cutoff, -84)) return false;
+      }
+    }
+    return true;
+  }
+  /* One draw from the ordered eligible pool. Returns {ok:true, member, declines,
+     draw:{beaconTimestamp, beaconValue, poolSize (eligible pool at draw time),
+     position (1-based index into the pool after removing earlier declines)}}.
+     Replay rule: sort the eligible pool by id, drop the recorded declines in
+     order, then position = beaconNum mod remaining + 1. Empty pool or missing
+     beacon resolves failed with no member - nothing is invented. */
+  function drawCommitteeMember(pool, beacon) {
+    if (!beacon || beacon.ok !== true || typeof beacon.beaconNum !== "number" || isNaN(beacon.beaconNum)) {
+      return { ok: false, reason: "beacon-unavailable", member: null };
+    }
+    var ordered = (pool || []).slice().sort(function (a, b) {
+      return String(a && a.id || "") < String(b && b.id || "") ? -1 : 1;
+    });
+    if (!ordered.length) return { ok: false, reason: "no-eligible", member: null };
+    var declines = [], remaining = ordered.slice();
+    while (remaining.length) {
+      var pos = (beacon.beaconNum % remaining.length) + 1;
+      var pick = remaining[pos - 1];
+      if (pick && pick.declined === true) { declines.push(pick.id); remaining.splice(pos - 1, 1); continue; }
+      return { ok: true, member: pick, declines: declines,
+        draw: { beaconTimestamp: beacon.beaconTimestamp || "", beaconValue: beacon.beaconValue || "",
+          poolSize: ordered.length, position: pos } };
+    }
+    return { ok: false, reason: "no-eligible", member: null, declines: declines };
+  }
+  /* Answer approval record (TY): stamp which serving committee member approved
+     an answer. Validates memberId against the CURRENT roster (never invents a
+     person); drafts and items without a record are untouched. The approvedBy
+     snapshot {memberId, name, state, termWeek} lives on the briefing item, so
+     it persists with the answer via the normal state save. Answer text is
+     never modified here. */
+  function recordApproval(state, committee, postId, memberId) {
+    var roster = (committee && committee.members) || [];
+    if (!roster.length) return { ok: false, reason: "empty-roster" };
+    var m = null, i;
+    for (i = 0; i < roster.length; i++) { if (roster[i] && roster[i].id === memberId) { m = roster[i]; break; } }
+    if (!m) return { ok: false, reason: "not-serving" };
+    var items = (state && state.briefingItems) || [], item = null;
+    for (i = 0; i < items.length; i++) { if (items[i] && items[i].postId === postId) { item = items[i]; break; } }
+    if (!item) return { ok: false, reason: "no-item" };
+    item.approvedBy = { memberId: m.id, name: m.name, state: m.state, termWeek: m.termWeek };
+    return { ok: true, approvedBy: item.approvedBy };
+  }
+  /* Citation record (TY): stamp the commitments' cited sources onto the
+     briefing item at approval. Each entry is free text {commitment, source,
+     date} filled in by the committee; no picker, no database. noCommit records
+     an explicit "no commitments" mark. Lives on the item, so it persists
+     with the answer via the normal state save. Answer text is never modified. */
+  function recordCitations(state, postId, list, noCommit) {
+    var items = (state && state.briefingItems) || [], item = null, i;
+    for (i = 0; i < items.length; i++) { if (items[i] && items[i].postId === postId) { item = items[i]; break; } }
+    if (!item) return { ok: false, reason: "no-item" };
+    if (!noCommit) {
+      if (!list || !list.length) return { ok: false, reason: "need-citations" };
+      for (i = 0; i < list.length; i++) {
+        if (!list[i] || !String(list[i].commitment || "").trim() || !String(list[i].source || "").trim() || !String(list[i].date || "").trim()) return { ok: false, reason: "need-citations" };
+      }
+    }
+    item.citations = (list || []).map(function (c) { return { commitment: String(c.commitment), source: String(c.source), date: String(c.date) }; });
+    item.noCommitments = !!noCommit;
+    return { ok: true, citations: item.citations };
+  }
+  /* Weekly rotation (runs on the Monday draw). Cycles out every termWeek >= 12
+     member into pastMembers (kept, never deleted), draws ONE replacement from
+     the eligible pool, adds them as term week 1 dated this Monday (+84d cycle-out),
+     and increments the rest. Guard: lastRotation stamps the Monday already
+     handled, so reloads never double-rotate. Beacon failure mutates nothing
+     (retry on a later load); an empty pool still records the week but adds none.
+     opts: {store, citizens, posts, cycleId, beacon, monday (ET-wall Date)}. */
+  function rotateCommittee(opts) {
+    var o = opts || {};
+    var st = o.store || blankCommittee();
+    if (!Array.isArray(st.members)) st.members = [];
+    if (!Array.isArray(st.pastMembers)) st.pastMembers = [];
+    var monday = (o.monday instanceof Date && !isNaN(o.monday.getTime())) ? o.monday : null;
+    var monISO = monday ? isoDay(monday) : "";
+    if (!monday || !monISO) return { ran: false, reason: "bad-monday", store: st };
+    if (st.lastRotation === monISO) return { ran: false, reason: "already-rotated", store: st };
+    var beacon = o.beacon;
+    if (!beacon || beacon.ok !== true) return { ran: false, reason: "beacon-unavailable", store: st };
+    var kept = [], out = [], i, m;
+    for (i = 0; i < st.members.length; i++) {
+      m = st.members[i];
+      if (m && (m.termWeek || 0) >= 12) {
+        out.push(m);
+        st.pastMembers.push({ id: m.id, name: m.name, state: m.state, termStart: m.termStart || "", termEnd: m.cycleOutDate || "", termEndISO: m.cycleOutISO || monISO });
+      } else if (m) { kept.push(m); }
+    }
+    st.members = kept;
+    if (st.members.length >= COMMITTEE_MAX && !out.length) return { ran: false, reason: "roster-full", store: st };
+    var ctx = { cycleId: o.cycleId, posts: o.posts || [], members: st.members, pastMembers: st.pastMembers, mondayISO: monISO };
+    var pool = ((o.citizens) || []).filter(function (c) { return committeeEligible(c, ctx); });
+    var added = null;
+    var sel = drawCommitteeMember(pool, beacon);
+    if (sel.ok && sel.member) {
+      var c = sel.member;
+      var startD = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate());
+      var outD = new Date(startD.getTime()); outD.setDate(outD.getDate() + 84);
+      added = { id: c.id, name: c.name, state: c.state, termStart: fmtDay(startD), termStartISO: isoDay(startD),
+        termWeek: 1, cycleOutDate: fmtDay(outD), cycleOutISO: isoDay(outD),
+        draw: sel.draw, verified: true, committeeMember: true };
+      st.members.push(added);
+    }
+    for (i = 0; i < st.members.length; i++) {
+      if (added && st.members[i] === added) continue;
+      st.members[i].termWeek = (st.members[i].termWeek || 0) + 1;
+    }
+    st.lastRotation = monISO;
+    return { ran: true, reason: sel.ok ? "rotated" : sel.reason, store: st, added: added, cycledOut: out };
+  }
+
   /* Standing cutoff rule: a post from a past cycle survives only if it was
      selected for a briefing (the top-voted winner or the random draw pick)
      or is a flagged retained copy. Posts from cycles that are
@@ -544,10 +750,122 @@ var PodiumStore = (function () {
     return post;
   }
 
+  /* "We can't do this" determinations and "Why can't we do this?" challenges.
+     All records live on the briefing item and persist with the normal state
+     save. No post or answer text is ever modified here. Every mutator returns
+     {ok:true,...} or {ok:false,reason:...} and leaves the item untouched on
+     failure. A determination is identified by determinationId, bumped each
+     time a "We can't do this" verdict is newly recorded, so one appeal per
+     determination is enforceable. */
+  function setNoAction(item, f) {
+    f = f || {};
+    if (!item) return { ok: false, reason: "no-item" };
+    if (!String(f.citedAuthority || "").trim()) return { ok: false, reason: "need-authority" };
+    if (!String(f.whatWouldChange || "").trim()) return { ok: false, reason: "need-path" };
+    if (!String(f.redirectTo || "").trim()) return { ok: false, reason: "need-redirect" };
+    if (f.committeeVote !== true) return { ok: false, reason: "need-vote" };
+    item.trackerStatus = "No Action";
+    item.citedAuthority = String(f.citedAuthority);
+    item.whatWouldChange = String(f.whatWouldChange);
+    item.redirectTo = String(f.redirectTo);
+    item.committeeVote = true;
+    item.determinationId = (item.determinationId || 0) + 1;
+    return { ok: true, determinationId: item.determinationId };
+  }
+  function openAppeal(item) {
+    if (!item) return null;
+    var det = item.determinationId || 0;
+    var ap = item.appeals || [];
+    for (var i = 0; i < ap.length; i++) {
+      if (ap[i] && ap[i].determinationId === det && !ap[i].outcome) return ap[i];
+    }
+    return null;
+  }
+  function appealFor(item, det) {
+    var ap = (item && item.appeals) || [];
+    for (var i = 0; i < ap.length; i++) {
+      if (ap[i] && ap[i].determinationId === det) return ap[i];
+    }
+    return null;
+  }
+  function fileAppeal(item, f) {
+    if (!item) return { ok: false, reason: "no-item" };
+    if (item.trackerStatus !== "No Action") return { ok: false, reason: "not-noaction" };
+    if (!f || !f.by) return { ok: false, reason: "need-citizen" };
+    var det = item.determinationId || 0;
+    var ap = item.appeals || (item.appeals = []);
+    if (appealFor(item, det)) return { ok: false, reason: "already-appealed" };
+    var a = { determinationId: det, by: f.by, name: f.name || "", date: f.date || "", text: String(f.text || ""), outcome: null };
+    ap.push(a);
+    item.trackerStatus = "In Progress";
+    return { ok: true, appeal: a };
+  }
+  function reviewAppeal(item, outcome) {
+    if (!item) return { ok: false, reason: "no-item" };
+    var a = openAppeal(item);
+    if (!a) return { ok: false, reason: "no-open-appeal" };
+    var d = (outcome && outcome.decision) || "";
+    if (d !== "upheld" && d !== "reinstated") return { ok: false, reason: "need-decision" };
+    a.outcome = { decision: d, note: String((outcome && outcome.note) || ""), date: (outcome && outcome.date) || "" };
+    if (d === "reinstated") {
+      item.trackerStatus = "No Action";
+      item.determinationId = (item.determinationId || 0) + 1;
+    }
+    return { ok: true, appeal: a };
+  }
+  function raiseChallenge(item, f) {
+    if (!item) return { ok: false, reason: "no-item" };
+    if (!f || !f.by) return { ok: false, reason: "need-citizen" };
+    if (!String(f.solution || "").trim()) return { ok: false, reason: "need-solution" };
+    var ch = item.challenges || (item.challenges = []);
+    var c = { id: "ch" + (ch.length + 1), raisedBy: f.by, raisedName: f.name || "", date: f.date || "",
+      solution: String(f.solution), status: "open", answer: null };
+    ch.push(c);
+    return { ok: true, challenge: c };
+  }
+  function answerChallenge(item, challengeId, f) {
+    if (!item) return { ok: false, reason: "no-item" };
+    var ch = item.challenges || [], c = null, i;
+    for (i = 0; i < ch.length; i++) { if (ch[i] && ch[i].id === challengeId) { c = ch[i]; break; } }
+    if (!c) return { ok: false, reason: "no-challenge" };
+    if (c.status !== "open") return { ok: false, reason: "already-answered" };
+    if (!String(f.text || "").trim()) return { ok: false, reason: "need-answer" };
+    if (!String(f.citedAuthority || "").trim()) return { ok: false, reason: "need-authority" };
+    if (!String(f.whatWouldChange || "").trim()) return { ok: false, reason: "need-path" };
+    if (!String(f.redirectTo || "").trim()) return { ok: false, reason: "need-redirect" };
+    c.answer = { text: String(f.text), citedAuthority: String(f.citedAuthority),
+      whatWouldChange: String(f.whatWouldChange), redirectTo: String(f.redirectTo), date: f.date || "" };
+    c.status = "answered";
+    return { ok: true, challenge: c };
+  }
+  function addResponse(item, f) {
+    if (!item) return { ok: false, reason: "no-item" };
+    if (!f || !f.by) return { ok: false, reason: "need-citizen" };
+    if (!String(f.text || "").trim()) return { ok: false, reason: "need-text" };
+    if (["record", "challenge", "update"].indexOf(f.kind) < 0) return { ok: false, reason: "need-target" };
+    var rs = item.responses || (item.responses = []);
+    for (var i = 0; i < rs.length; i++) {
+      if (rs[i] && rs[i].by === f.by && rs[i].kind === f.kind && String(rs[i].id) === String(f.id)) {
+        return { ok: false, reason: "already-responded" };
+      }
+    }
+    var r = { by: f.by, name: f.name || "", date: f.date || "", text: String(f.text), kind: f.kind, id: String(f.id) };
+    rs.push(r);
+    return { ok: true, response: r };
+  }
+
   return {
     currentCycleId: currentCycleId,
     load: load,
     save: save,
+    loadCommittee: loadCommittee,
+    saveCommittee: saveCommittee,
+    fetchCommitteeBeacon: fetchCommitteeBeacon,
+    committeeEligible: committeeEligible,
+    drawCommitteeMember: drawCommitteeMember,
+    recordApproval: recordApproval,
+    recordCitations: recordCitations,
+    rotateCommittee: rotateCommittee,
     citizenById: citizenById,
     postById: postById,
     postByRef: postByRef,
@@ -565,6 +883,14 @@ var PodiumStore = (function () {
     displayDateFor: displayDateFor,
     replayCycles: replayCycles,
     replayReady: replayReady,
-    publishPost: publishPost
+    publishPost: publishPost,
+    setNoAction: setNoAction,
+    openAppeal: openAppeal,
+    appealFor: appealFor,
+    fileAppeal: fileAppeal,
+    reviewAppeal: reviewAppeal,
+    raiseChallenge: raiseChallenge,
+    answerChallenge: answerChallenge,
+    addResponse: addResponse
   };
 })();
