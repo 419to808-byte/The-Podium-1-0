@@ -89,7 +89,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .feed-filters { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .6rem; }
 .filter-label { display: grid; gap: .2rem; font-weight: 600; font-size: .9rem; }
 .filter-label[hidden] { display: none; }
-.filter-label select, .filter-label input { font-weight: 400; }
+.filter-label select, .filter-label input { font-weight: 400; min-width: 0; }
 select, input[type="search"], input[type="text"], textarea {
   font: inherit; padding: .5rem .6rem; border: 1px solid #8d8d8d; border-radius: 3px; background: #fff; color: var(--ink); max-width: 100%;
 }
