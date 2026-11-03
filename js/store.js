@@ -354,6 +354,7 @@ var PodiumStore = (function () {
   function isoDay(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
   function fmtDay(d) { return WD_SHORT[d.getDay()] + " " + ET_MONTHS[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear(); }
   function addDaysISO(iso, n) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); if (!m) return ""; var d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])); d.setDate(d.getDate() + n); return isoDay(d); }
+  function addYearsISO(iso, n) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); if (!m) return ""; var d = new Date(Number(m[1]) + n, Number(m[2]) - 1, Number(m[3])); return isoDay(d); }
   function mondayOfWeek(d) { var m = new Date(d.getFullYear(), d.getMonth(), d.getDate()); m.setDate(m.getDate() - ((m.getDay() + 6) % 7)); return m; }
   /* Fetch the latest NIST beacon pulse. Resolves {ok:true, beaconTimestamp
      (the pulse's own ISO timestamp), beaconValue (full hex outputValue),
@@ -384,16 +385,26 @@ var PodiumStore = (function () {
   }
   /* Eligibility for the committee draw. Citizen flags (set when a citizen agrees
      to serve): verified, agreedToServe, declined (declines the drawn seat when
-     true - the draw skips past them), govEmployee, isFelon, age. Unknown age /
-     employee / felon status passes here; agreement-time verification owns those
-     gates. ctx: {cycleId, posts, members, pastMembers, mondayISO}. */
+     true - the draw skips past them), govEmployee, isFelon, felonySentenceEndISO, age.
+     Unknown age / employee status, and unknown felon status (isFelon not true),
+     pass here; agreement-time verification owns those gates. Felons are excluded
+     while incarcerated or on parole/probation, and become eligible again 5
+     calendar years after the sentence fully ends, per felonySentenceEndISO
+     ("YYYY-MM-DD", recorded at agreement-time verification). A felon with no
+     recorded completion date fails closed (ineligible).
+     ctx: {cycleId, posts, members, pastMembers, mondayISO}. */
   function committeeEligible(c, ctx) {
     if (!c) return false;
     if (c.verified !== true) return false;
     if (c.agreedToServe !== true) return false;
     if (typeof c.age === "number" && c.age < 18) return false;
     if (c.govEmployee === true) return false;
-    if (c.isFelon === true) return false;
+    if (c.isFelon === true) {
+      var endISO = c.felonySentenceEndISO, monISO = ctx && ctx.mondayISO;
+      if (typeof endISO !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(endISO)) return false;
+      if (typeof monISO !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(monISO)) return false;
+      if (endISO > addYearsISO(monISO, -5)) return false;
+    }
     var i, members = (ctx && ctx.members) || [], posts = (ctx && ctx.posts) || [];
     for (i = 0; i < members.length; i++) { if (members[i] && members[i].id === c.id) return false; }
     for (i = 0; i < posts.length; i++) {
