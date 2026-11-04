@@ -43,10 +43,12 @@ body {
 .citizen-box { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
 .citizen-chip { font-size: .85rem; background: var(--navy-deep); border: 1px solid #33506e; border-radius: 3px; padding: .25rem .7rem; }
 .verified { color: #9fe6a0; font-weight: 600; white-space: nowrap; }
-.main-nav { display: flex; gap: .4rem; margin-top: .7rem; flex-wrap: wrap; }
+.main-nav { display: flex; gap: .3rem; margin-top: .7rem; flex-wrap: wrap; }
+@media (min-width: 60rem) { .main-nav { flex-wrap: nowrap; } }
+html[lang="es"] .main-nav { flex-wrap: wrap; }
 .tab {
   appearance: none; border: 1px solid #33506e; background: transparent; color: #fff;
-  border-radius: 3px; padding: .45rem 1rem; font-size: .95rem; cursor: pointer;
+  border-radius: 3px; padding: .45rem .6rem; font-size: .9rem; white-space: nowrap; cursor: pointer;
 }
 .tab.is-active { background: var(--accent-soft); color: var(--navy-deep); border-color: var(--accent-soft); font-weight: 700; }
 a:focus-visible,
