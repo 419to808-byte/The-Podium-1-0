@@ -46,7 +46,7 @@
     return body.slice(0, n).replace(/\s\S*$/, "") + "\u2026";
   }
   function votesLabel(n) {
-    return n + " " + (n === 1 ? T("vote.one") : T("vote.many"));
+    return esc(n) + " " + (n === 1 ? T("vote.one") : T("vote.many"));
   }
   /* Frozen author state (display metadata only; empty means none shown). */
   function stateSuffix(p) {
@@ -1993,7 +1993,7 @@
     if (item.selection === "top") {
       return '<span class="badge-top">' + esc(T("selbadge.top")) + " \u00b7 " + esc(votesLabel(p.votes)) + "</span>";
     }
-    return '<span class="badge-random">' + esc(T("selbadge.random")) + " \u00b7 " + esc(T("selbadge.position")) + " " + cycle.position + " " + esc(T("selbadge.of")) + " " + poolLen + "</span>";
+    return '<span class="badge-random">' + esc(T("selbadge.random")) + " \u00b7 " + esc(T("selbadge.position")) + " " + esc(cycle.position) + " " + esc(T("selbadge.of")) + " " + esc(poolLen) + "</span>";
   }
   /* Verbatim excerpt only: the author's exact words (first sentence, capped
      at ~200 chars). Never a paraphrase — the Verbatim Rule forbids editors. */
