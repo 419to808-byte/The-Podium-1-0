@@ -194,11 +194,7 @@
     "fine.li13": "The Live Feed shows the current cycle only. Posts from past cycles that were never selected are deleted; selected posts are kept as the briefing record.",
     "fine.li14": "Posting and voting run from Monday 12:00 AM to Sunday 11:59 PM ET. The pool freezes at the Sunday cutoff, the draw is Monday at 12:00 PM ET, the committee has the week plus a Monday–Tuesday buffer, and the briefing airs Wednesdays at 1:00 PM ET as the fixed opening segment.",
     "fine.li15": "This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay is published when that briefing airs. Prior Posts & Answers and Status Updates list aired selections only.",
-    "fine.li16": "Participation is limited to verified citizens; verification is simulated only, and no real identification is collected or stored.",
     "fine.li17": "Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.",
-    "fine.li18": "Live activity: when \u2018Simulate live activity\u2019 is enabled, the feed shows AI-generated sample posts, clearly labeled. They are never voted on, never drawn, and never briefed.",
-    "fine.li19": "Mock accounts: signing up stores a local profile in this browser only, with no real identity verification.",
-    "fine.li20": "Real sign-in/sign-up: shown as a preview; the backend and text verification are not yet built.",
     "fine.li21": "Security: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log.",
     /* feed */
     "feed.aria": "Feed of citizen posts",
@@ -3536,8 +3532,9 @@
     setText("fineLede", T("fine.lede"));
     setText("statementsHeading", T("fine.statements"));
     setText("finePurpose", T("fine.purpose"));
-    Array.prototype.forEach.call(document.querySelectorAll("#fineList li"), function (li, i) {
-      li.textContent = (li.id === "fineLi21") ? T("fine.li21") : T("fine.li" + (i + 1));
+    Array.prototype.forEach.call(document.querySelectorAll("#fineList li"), function (li) {
+      var m = /^fineLi(\d+)$/.exec(li.id || "");
+      if (m) li.textContent = T("fine.li" + m[1]);
     });
     setText("citizenStateLabel", T("citizen.state.label"));
     setAttr("citizenStateSel", "aria-label", T("citizen.state.aria"));

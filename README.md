@@ -1,4 +1,4 @@
-# The Podium 1.0 — empty starter
+﻿# The Podium 1.0 — empty starter
 
 The Podium 1.0 is a nearly-ready-to-use starter derived from the demo
 (The Podium). Same structure, layouts, and AI wiring —
@@ -44,9 +44,8 @@ To reset the starter: clear the site's localStorage (or run
 - Watch Live keeps its timing logic and player structure. With no
   briefings there is nothing to air: a live window shows a standby
   message, Upcoming names the next briefing date, and Replay is empty.
-- A single signed-in local user (no identity picker). Sign-in here is
-  a placeholder — the Fine print carries that limitation plainly, and
-  real identity verification is required before production use.
+- A single signed-in local user (no identity picker). Real identity
+  verification is required before production use.
 
 ## Structure
 
