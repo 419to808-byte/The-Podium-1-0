@@ -516,6 +516,8 @@
     "audit.ev.decline": "Answer declined",
     "audit.ev.liaisonAdvice": "Liaison advice",
     "audit.ev.help": "Help request",
+    "audit.ev.challenge": "Challenge raised",
+    "audit.ev.challenge-answer": "Government answer recorded",
     /* watch */
     "watch.aria": "Watch live broadcast",
     "watch.lede": "Attend the weekly briefing broadcast. The Weekly Briefing tab holds the record of what was and will be discussed; this tab is the airing itself.",
@@ -2748,6 +2750,7 @@
       if (!due.trim()) { fail("form.required"); return; }
       var r = PodiumStore.raiseChallenge(b, { by: state.currentUserId, name: me ? me.name : "", date: todayShort(), solution: sol, dueDate: due });
       if (!r.ok) { fail("form.required"); return; }
+      audit("challenge", p.ref || "", r.challenge.id);
       ok(rerender);
     });
     Array.prototype.forEach.call(root.querySelectorAll('[data-act="challenge-copy"]'), function (btn) {
@@ -2777,6 +2780,7 @@
         if (!f.text.trim() || !f.whatWouldChange.trim() || !f.redirectTo.trim()) { fail("form.required"); return; }
         var r = PodiumStore.answerChallenge(b, id, f);
         if (!r.ok) { fail("form.required"); return; }
+        audit("challenge-answer", p.ref || "", id);
         ok(rerender);
       });
     });

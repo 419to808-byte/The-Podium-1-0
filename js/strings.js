@@ -430,6 +430,8 @@ var PodiumStrings = (function () {
     "audit.ev.decline": { en: "Answer declined", es: "Respuesta rechazada" },
     "audit.ev.liaisonAdvice": { en: "Liaison advice", es: "Asesor\u00eda del enlace" },
     "audit.ev.help": { en: "Help request", es: "Solicitud de ayuda" },
+    "audit.ev.challenge": { en: "Challenge raised", es: "Desafío planteado" },
+    "audit.ev.challenge-answer": { en: "Government answer recorded", es: "Respuesta del gobierno registrada" },
     "audit.ev.authorityGranted": { en: "Authority granted", es: "Autoridad otorgada" },
     "audit.ev.authorityRevoked": { en: "Authority revoked (term ended)", es: "Autoridad revocada (mandato terminado)" },
     /* watch */
