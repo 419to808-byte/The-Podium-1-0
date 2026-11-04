@@ -3994,7 +3994,7 @@
       statusP.textContent = "";
       PodiumAI.askWonderHelp(q).then(function (ans) {
         askBtn.disabled = false;
-        if (!ans) { statusP.textContent = T("help.unavailable"); return; }
+        if (!ans) { statusP.textContent = T("help.unavailable"); try { audit("help", "", JSON.stringify({ category: cat, question: q, answer: null, failed: true })); PodiumStore.save(state); } catch (e) { /* session-only fallback */ } return; }
         ansP.textContent = ans;
         respDiv.hidden = false;
         var tracked = (cat !== "howto");
