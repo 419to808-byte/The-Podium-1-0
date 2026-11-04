@@ -210,7 +210,8 @@ h2 { text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid 
 .post-list .post:first-child { border-top: 1px solid var(--line); }
 .post-list .post.is-linked { border: 2px solid var(--accent); background: #fffdf4; border-radius: 3px; }
 .updates li { border-bottom: 1px solid var(--line); padding: .3rem 0; }
-.footer-cols { display: grid; gap: 1rem; }
+.footer-cols { display: grid; gap: 1rem; align-items: start; }
+.footer-strip { display: grid; gap: 1rem; margin-top: 1rem; }
 .footer-col h2 { font-size: .95rem; }
 .footer-col p { margin: .3rem 0; }
 .excluded-list { margin: .3rem 0; padding-left: 1.2rem; }

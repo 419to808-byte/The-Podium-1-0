@@ -271,16 +271,18 @@
       <h2 id="footerSecurity">Security</h2>
       <p id="footerSecurityNote">Every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log. The real product is planned to verify identity through Login.gov and use phishing-resistant sign-in, designed to meet federal security standards. The backend items are not yet built.</p>
     </div>
+  </div>
+  <div class="wrap footer-strip">
     <div class="footer-col">
       <h2 id="footerNotices">Notices</h2>
       <p id="footerStarterNotice"><strong>Notice:</strong> sign-in is a placeholder; no real personal data is collected, requested, or stored. AI checks run locally until a Model API key is provided for the session. This site ships with no users, posts, answers, or updates.</p>
     </div>
-  </div>
-  <div class="wrap key-row">
+    <div class="key-row">
     <label for="apiKeyInput"><span id="apiKeyLabel">Model API key</span> <span class="hint" id="apiKeyHint">(session only — kept in sessionStorage, cleared when the tab closes; never committed)</span></label>
     <input type="password" id="apiKeyInput" autocomplete="off" placeholder="Paste key for this session">
     <button type="button" class="btn btn-small" id="apiKeySave">Save key</button>
     <button type="button" class="btn btn-small" id="apiKeyClear">Clear</button>
+  </div>
   </div>
 </footer>
 
