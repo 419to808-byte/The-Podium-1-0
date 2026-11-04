@@ -383,22 +383,23 @@
 
 
     "wonder.pending": "AI-drafted by Muse Wonder \u2014 pending committee review",
-    "wonder.edited": "AI-drafted by Muse Wonder, edited by committee \u2014 pending committee review",
     "wonder.edit": "Edit draft",
     "wonder.edit.aria": "Edit the committee draft answer",
     "wonder.save": "Save edit",
     "wonder.cancel": "Cancel",
     "wonder.approve": "Approve draft",
+    "wonder.decline": "Decline draft",
+    "wonder.declined.note": "Declined by the committee. This post reverts to shine light: it will still be read aloud at the briefing and tracked, never buried.",
     "wonder.drafting": "Drafting with Muse Wonder ({model})...",
     "wonder.unavailable": "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.",
     "wonder.approved": "Approved by committee",
+    "wonder.nocites": "This draft carries no citations and no \u201cNo commitments in this answer\u201d declaration, so it cannot be approved.",
     "cite.legend": "Citations",
     "cite.commitment": "Commitment",
     "cite.source": "Source",
-    "cite.add": "Add citation",
     "cite.remove": "Remove",
     "cite.nocommit": "No commitments in this answer",
-    "cite.required": "Citations are required \u2014 add one citation per commitment, or mark \u201cNo commitments in this answer\u201d.",
+
     "cite.commitment.ph": "Short quote of the commitment\u2026",
     "cite.source.ph": "Agency or authority\u2026",
     "cite.date": "Date",
@@ -2069,10 +2070,8 @@
      before the briefing airs. */
   var wonderDrafts = {};   /* postId -> draft text */
   var wonderApproved = {}; /* postId -> true once approved in this session */
-  var wonderCitations = {}; /* postId -> [{commitment, source, date}] editor state, recorded onto the item at approval */
+  var wonderDeclined = {}; /* postId -> true once declined in this session (post reverts to shine light) */
   var wonderLiaisonAdvice = {}; /* postId -> [{liaison, claim, authority, date, outcome}] recorded in the draft zone, logged on approval, session-only */
-  var wonderNoCommit = {}; /* postId -> true when the approver marked "no commitments" */
-  var wonderEdited = {};   /* postId -> true once the committee edited the draft */
   /* Draft-zone visibility: in the real product drafts and editing are committee-only; this starter shows the zone publicly. */
 
   function buildWonderZone(p) {
@@ -2084,7 +2083,7 @@
     draftBtn.textContent = T("wonder.draft");
     var wonderStatus = document.createElement("p");
     wonderStatus.className = "hint";
-    wonderBox.appendChild(draftBtn);
+    if (!wonderDrafts[p.id] && !wonderApproved[p.id] && !wonderDeclined[p.id]) wonderBox.appendChild(draftBtn);
     wonderBox.appendChild(wonderStatus);
     /* Approval gate (TY): with no serving approver the block reason stays
        visible in the zone, so the empty-roster state needs no draft to see. */
@@ -2094,48 +2093,17 @@
     if (!svZone.member) rosterNote.textContent = T(svZone.reason === "empty" ? "approver.none" : "approver.notserving");
     wonderBox.appendChild(rosterNote);
     function draftLabel() {
-      return wonderEdited[p.id] ? T("wonder.edited") : T("wonder.pending");
+      return T("wonder.pending");
     }
+    function draftGate(d) { return !!(d && (d.noCommitments || (d.citations && d.citations.length))); }
     function showDraft() {
       var draft = wonderDrafts[p.id];
-      if (!draft || wonderApproved[p.id]) return;
+      if (!draft || wonderApproved[p.id] || wonderDeclined[p.id]) return;
       var box = document.createElement("div");
       box.innerHTML = '<span class="zone-label">' + esc(draftLabel()) + "</span>" +
-        "<p>" + esc(draft) + "</p>";
-      var editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className = "btn btn-small";
-      editBtn.textContent = T("wonder.edit");
-      editBtn.addEventListener("click", function () {
-        /* Local UI operation on the returned draft text only: no model
-           call, no re-draft. Save updates the session-only draft. */
-        box.innerHTML = '<span class="zone-label">' + esc(draftLabel()) + "</span>";
-        var ta = document.createElement("textarea");
-        ta.value = wonderDrafts[p.id];
-        ta.rows = 6;
-        ta.style.width = "100%";
-        ta.setAttribute("aria-label", T("wonder.edit.aria"));
-        box.appendChild(ta);
-        var saveBtn = document.createElement("button");
-        saveBtn.type = "button";
-        saveBtn.className = "btn btn-small";
-        saveBtn.textContent = T("wonder.save");
-        saveBtn.addEventListener("click", function () {
-          if (!ta.value.trim()) { renderBriefing(); return; }
-          wonderDrafts[p.id] = ta.value;
-          wonderEdited[p.id] = true;
-          renderBriefing();
-        });
-        var cancelBtn = document.createElement("button");
-        cancelBtn.type = "button";
-        cancelBtn.className = "btn btn-small";
-        cancelBtn.textContent = T("wonder.cancel");
-        cancelBtn.addEventListener("click", function () { renderBriefing(); });
-        box.appendChild(saveBtn);
-        box.appendChild(document.createTextNode(" "));
-        box.appendChild(cancelBtn);
-        ta.focus();
-      });
+        "<p>" + esc(draft.text) + "</p>" +
+        citationsHtml({ citations: draft.citations || [] }, p) +
+        (draft.noCommitments ? '<p class="hint">' + esc(T("cite.nocommit")) + "</p>" : "");
       var approveBtn = document.createElement("button");
       approveBtn.type = "button";
       approveBtn.className = "btn btn-small";
@@ -2146,64 +2114,31 @@
         wonderStatus.textContent = T(svBtn.reason === "empty" ? "approver.none" : "approver.notserving");
       }
       approveBtn.addEventListener("click", function () {
-        if (!wonderNoCommit[p.id] && !(wonderCitations[p.id] && wonderCitations[p.id].length)) { trackerMsg(box, "cite.required"); return; }
+        if (!draftGate(draft)) { trackerMsg(box, "wonder.nocites"); return; }
         var res = approveAnswerFor(p);
         if (!res.ok) { wonderStatus.textContent = T(res.key); renderBriefing(); return; }
-        var rc = PodiumStore.recordCitations(state, p.id, wonderCitations[p.id] || [], !!wonderNoCommit[p.id]);
-        if (!rc.ok) { trackerMsg(box, "cite.required"); return; }
+        var rc = PodiumStore.recordCitations(state, p.id, draft.citations || [], !!draft.noCommitments);
+        if (!rc.ok) { trackerMsg(box, "wonder.nocites"); return; }
         try { PodiumStore.save(state); } catch (e) { /* session-only fallback */ }
         audit("approve", p.ref + "-A", "");
         (wonderLiaisonAdvice[p.id] || []).forEach(function (a) {
           audit("liaisonAdvice", p.ref, JSON.stringify({ liaison: a.liaison, claim: a.claim, authority: a.authority, date: a.date, outcome: a.outcome }));
         });
         wonderApproved[p.id] = true;
-        delete wonderCitations[p.id];
-        delete wonderNoCommit[p.id];
         renderBriefing();
       });
-      var citeSection = document.createElement("div");
-      function renderCites() {
-        var list = wonderCitations[p.id] || [];
-        var h = '<p><span class="zone-label">' + esc(T("cite.legend")) + "</span></p>";
-        for (var i = 0; i < list.length; i++) {
-          h += '<p class="hint">' + esc(T("cite.commitment")) + ": " + esc(list[i].commitment) + " \u2014 " + esc(T("cite.source")) + ": " + esc(list[i].source) + ", " + esc(list[i].date) + (list[i].liaison ? " \u2014 " + esc(T("cite.via")) + " " + esc(list[i].liaison) : "") + ' <button type="button" class="btn btn-small" data-cite-rm="' + i + '">' + esc(T("cite.remove")) + "</button></p>";
-        }
-        h += '<div class="field"><label>' + esc(T("cite.commitment")) + '</label><textarea data-cite="commitment" rows="2" placeholder="' + esc(T("cite.commitment.ph")) + '"></textarea></div>' +
-          '<div class="field"><label>' + esc(T("cite.source")) + '</label><textarea data-cite="source" rows="2" placeholder="' + esc(T("cite.source.ph")) + '"></textarea></div>' +
-          '<div class="field"><label>' + esc(T("cite.date")) + '</label><input type="text" data-cite="date" placeholder="' + esc(T("cite.date.ph")) + '"></div>' +
-          '<div class="field"><label>' + esc(T("cite.liaison")) + '</label><input type="text" data-cite="liaison" placeholder="' + esc(T("cite.liaison.ph")) + '"></div>' +
-          '<div class="btn-row"><button type="button" class="btn btn-small" data-cite-add>' + esc(T("cite.add")) + "</button></div>" +
-          '<div class="field"><label><input type="checkbox" data-cite-none> ' + esc(T("cite.nocommit")) + "</label></div>";
-        citeSection.innerHTML = h;
-        function citeVal(n) { var el = citeSection.querySelector('[data-cite="' + n + '"]'); return el ? el.value : ""; }
-        var addBtn = citeSection.querySelector("[data-cite-add]");
-        if (addBtn) addBtn.addEventListener("click", function () {
-          if (!citeVal("commitment").trim() || !citeVal("source").trim() || !citeVal("date").trim()) { trackerMsg(box, "form.required"); return; }
-          var l = wonderCitations[p.id] || (wonderCitations[p.id] = []);
-          l.push({ commitment: citeVal("commitment"), source: citeVal("source"), date: citeVal("date"), liaison: citeVal("liaison") });
-          delete wonderNoCommit[p.id];
-          trackerMsg(box, null);
-          renderCites();
-        });
-        Array.prototype.forEach.call(citeSection.querySelectorAll("[data-cite-rm]"), function (btn) {
-          btn.addEventListener("click", function () {
-            var l = wonderCitations[p.id] || [];
-            l.splice(Number(btn.getAttribute("data-cite-rm")), 1);
-            renderCites();
-          });
-        });
-        var none = citeSection.querySelector("[data-cite-none]");
-        if (none) {
-          none.checked = !!wonderNoCommit[p.id];
-          none.addEventListener("change", function () {
-            if (none.checked) { wonderNoCommit[p.id] = true; wonderCitations[p.id] = []; }
-            else delete wonderNoCommit[p.id];
-            renderCites();
-          });
-        }
+      var declineBtn = document.createElement("button");
+      declineBtn.type = "button";
+      declineBtn.className = "btn btn-small";
+      declineBtn.textContent = T("wonder.decline");
+      if (!svBtn.member) {
+        declineBtn.disabled = true;
       }
-      renderCites();
-      box.appendChild(citeSection);
+      declineBtn.addEventListener("click", function () {
+        wonderDeclined[p.id] = true;
+        audit("decline", p.ref + "-A", "");
+        renderBriefing();
+      });
       /* Liaison-advice record (TY, Nov 4): each piece of liaison advice that
          shapes the answer is recorded here with the authority cited and what
          the committee did with it. Session-only until approval, when the
@@ -2249,9 +2184,16 @@
       }
       renderAdvice();
       box.appendChild(adviceSection);
-      box.appendChild(editBtn);
-      box.appendChild(document.createTextNode(" "));
       box.appendChild(approveBtn);
+      box.appendChild(document.createTextNode(" "));
+      box.appendChild(declineBtn);
+      if (!draftGate(draft)) {
+        approveBtn.disabled = true;
+        var gateHint = document.createElement("p");
+        gateHint.className = "hint";
+        gateHint.textContent = T("wonder.nocites");
+        box.appendChild(gateHint);
+      }
       wonderBox.appendChild(box);
     }
     draftBtn.addEventListener("click", function () {
@@ -2266,18 +2208,19 @@
         wonderDrafts[p.id] = draft;
         audit("draft", p.ref + "-A", "");
         delete wonderApproved[p.id];
-        delete wonderEdited[p.id];
         delete wonderLiaisonAdvice[p.id];
-        delete wonderCitations[p.id];
-        delete wonderNoCommit[p.id];
         wonderStatus.textContent = "";
         showDraft();
       });
     });
-    if (wonderApproved[p.id] && wonderDrafts[p.id]) {
+    if (wonderDeclined[p.id]) {
+      var dec = document.createElement("div");
+      dec.innerHTML = '<p class="hint">' + esc(T("wonder.declined.note")) + "</p>";
+      wonderBox.appendChild(dec);
+    } else if (wonderApproved[p.id] && wonderDrafts[p.id]) {
       var done = document.createElement("div");
       done.innerHTML = '<p><span class="status-pill">' + esc(T("wonder.approved")) + "</span></p>" +
-        "<p>" + esc(wonderDrafts[p.id]) + "</p>" +
+        "<p>" + esc(wonderDrafts[p.id].text) + "</p>" +
         approverHtml(PodiumStore.briefingItemFor(state, p.id)) +
         citationsHtml(PodiumStore.briefingItemFor(state, p.id), p);
       wireApproverLinks(done);
@@ -3482,7 +3425,6 @@
     return { ok: true, approvedBy: res.approvedBy };
   }
   function citationsFor(b, p) {
-    if (p && wonderCitations[p.id] && wonderCitations[p.id].length) return wonderCitations[p.id];
     return (b && b.citations) || [];
   }
   function citationsHtml(b, p) {

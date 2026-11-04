@@ -660,7 +660,8 @@ var PodiumAI = (function () {
     "Do NOT misrepresent the post: if you reference the citizen's words, quote them verbatim; never paraphrase the citizen's words as if they were the post. " +
     "Do NOT invent commitments beyond a plausible committee action (process steps only — transmit, report status — never promise enactment or outcomes). " +
     "Write ONLY the proposed answer itself. Do not include any sentence about the draft, its status, or whether it is final — no 'this draft...', 'this is a draft...', 'does not represent a final...' meta language of any kind. The interface labels the text as a draft pending committee review; the answer body must read as the proposed answer, nothing meta. " +
-    "Never alter, reword, or comment on the post itself. Reply with ONLY the draft answer text, no prefix, no label, no quotation marks around the whole answer.";
+    "Never alter, reword, or comment on the post itself. Reply with ONLY the draft answer text, no prefix, no label, no quotation marks around the whole answer. " +
+    "Add a 'Citations:' section listing one line per commitment in the exact form '- COMMITMENT | SOURCE | DATE' (commitment quote, agency or authority, date), or - if the answer makes no commitments - a line reading exactly 'No commitments in this answer.'.";
   function wonderChat(systemText, userText) {
     var t = WONDER_TRANSPORT;
     var key = getKey();
@@ -684,9 +685,39 @@ var PodiumAI = (function () {
     }, WONDER_TIMEOUT_MS);
   }
   /* Draft a committee answer for a selected post. Input is the post object
-     (verbatim body, topic, ref, frozen authorState). Resolves the clean
-     draft text (no "Sample committee response:" prefix — the UI labels it
+     (verbatim body, topic, ref, frozen authorState). Resolves the draft
+     envelope { text, citations, noCommitments } (no "Sample committee response:" prefix — the UI labels it
      as a draft), or null when Wonder is unavailable. */
+  /* Draft envelope: a draft arrives complete — the answer text plus its
+     citations, so the committee votes on it as written and never attaches
+     citations itself. parseDraftEnvelope splits the model reply into
+     { text, citations, noCommitments }. Malformed citation lines are dropped;
+     a draft with neither valid citations nor the declaration cannot be
+     approved. */
+  var NO_COMMIT_LINE = "No commitments in this answer.";
+  function parseDraftEnvelope(text) {
+    var lines = String(text == null ? "" : text).replace(/\s+$/, "").split("\n");
+    var cites = [], noCommit = false, end = lines.length, i, t, dropped = {};
+    for (i = end - 1; i >= 0; i--) {
+      t = lines[i].trim();
+      if (!t) { end = i; continue; }
+      if (t.toLowerCase() === NO_COMMIT_LINE.toLowerCase()) { noCommit = true; end = i; continue; }
+      if (t.charAt(0) === "-") {
+        var parts = t.slice(1).split("|");
+        if (parts.length >= 3) {
+          var cm = parts[0].trim().replace(/^["\u201c\u201d]+|["\u201c\u201d]+$/g, ""), sc = parts[1].trim(), dt = parts.slice(2).join("|").trim();
+          if (cm && sc && dt) { cites.unshift({ commitment: cm, source: sc, date: dt, liaison: "" }); end = i; continue; }
+        }
+        dropped[i] = true;
+        continue;
+      }
+      if (t.toLowerCase() === "citations:") { end = i; continue; }
+      break;
+    }
+    if (cites.length) noCommit = false;
+    var kept = lines.filter(function (ln, j) { return j < end && !dropped[j]; });
+    return { text: kept.join("\n").replace(/\s+$/, ""), citations: cites, noCommitments: cites.length ? false : noCommit };
+  }
   function draftCommitteeAnswer(post) {
     if (!post || !getKey()) return Promise.resolve(null);
     var user = "Reference code: " + (post.ref || "") + "\n" +
@@ -695,7 +726,9 @@ var PodiumAI = (function () {
       "Citizen post (verbatim):\n" + String(post.body || "");
     return wonderChat(ANSWER_SYSTEM, user).then(function (text) {
       if (!text) return null;
-      return text.replace(/^Sample committee response:\s*/i, "").trim() || null;
+      var d = parseDraftEnvelope(text.replace(/^Sample committee response:\s*/i, ""));
+      if (!d.text) return null;
+      return d;
     });
   }
   /* ---------- on-demand post translation (multilingual slice, step 4) ----
