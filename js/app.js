@@ -131,6 +131,15 @@
     "committee.draw.pool": "Pool size",
     "committee.draw.pos": "Draw position",
     "committee.note": "One citizen cycles out and one new citizen joins every week, so the committee is always 12 people with a mix of experience.",
+    "committee.rules.summary": "Committee rules \u2014 selection, pay, structure & schedule",
+    "committee.rules.selection.heading": "How members are selected",
+    "committee.rules.selection.body": "Twelve ordinary verified citizens, chosen by random draw from a national pool using the NIST Randomness Beacon \u2014 the same rig-proof method as the post draw. Selection is a summons, not a draft: if your name comes up, you agree to serve or decline and the next citizen is drawn. To serve you must be a verified citizen, 18 or older, with no post in the current cycle, not a government employee, and not currently incarcerated or on parole or probation \u2014 a past felony does not exclude you; eligibility returns 5 years after the sentence is fully complete. Terms are 12 weeks, one new citizen joins every week, and after cycling out you sit out 12 weeks. No more than 2 terms per year.",
+    "committee.rules.pay.heading": "Pay",
+    "committee.rules.pay.body": "Members are paid $150 per day, once a week, for the Wednesday vote. Travel, hotel, and meals for the weekly in-person meeting are covered separately at government rates and booked directly \u2014 members never pay out of pocket \u2014 plus childcare support for in-person days and an optional top-up for shift workers who can show they lose more than the base stipend.",
+    "committee.rules.structure.heading": "Structure",
+    "committee.rules.structure.body": "Twelve members, each holding an equal share of the decision-making power. Government agency liaisons advise only and do not vote. Each week the committee receives the selected posts and the AI-drafted answers and votes on whether to follow the AI suggestions. A split vote means no action on that post this week and the post reverts to shine light \u2014 it is still read aloud and tracked, never buried. The narrator and the committee spokesperson are permanent salaried roles who present only: the narrator reads posts word-for-word and the spokesperson presents the committee's approved answers. Neither has any authority over posts or answers. If either quits or is fired, a selection, election, or hiring process replaces them.",
+    "committee.rules.schedule.heading": "Weekly schedule",
+    "committee.rules.schedule.body": "Members receive the selected posts as soon as they are selected and have 6 days on their own to think about them. They all meet in person on Wednesday morning to deliberate and vote. Then the narrator and the committee spokesperson make the script and record live at 1:00 PM ET. The Podium funds a round-trip ticket and a hotel for every member every week.",
     /* answer approver (answerer of record) */
     "approver.prefix": "Reviewed and approved by",
     "approver.suffix": "civilian committee member, Week {week} of 12",
@@ -557,6 +566,32 @@
     $("citizenStateWrap").hidden = false;
     $("citizenStateSel").value = me.state || "";
   }
+  /* GOVERNMENT-MODEL BACKEND HOOKS (TY, Nov 3 - structure only, nothing
+     below is implemented; the starter stays a static site with no backend):
+     - Identity proofing (IAL2, NIST SP 800-63): hook a Login.gov / ID.me
+       integration where the real sign-up collects identity - photo ID + SSN +
+       selfie/facial match, or in-person at a Post Office. This starter never
+       collects SSNs (sign-in here is a single local profile placeholder).
+     - Sign-in (AAL2): hook FIDO2/passkey + security-key (WebAuthn) and
+       authenticator-app MFA where the real sign-in verifies the session;
+       SMS text-back is NIST-"restricted" - fallback only, with a warning.
+     - SSN field-level encryption: hook envelope encryption (KMS/HSM data
+       keys) at any point that would persist an SSN - no such point exists
+       in this starter (SSN fields are disabled and unwired by design).
+     - Hosting: FedRAMP-authorized cloud behind WAF + DDoS protection;
+       hook at deploy/infra, not in this client code.
+     - Backups: encrypted off-site replicas hook at PodiumStore.save
+       (see the save() hook note in js/store.js) - WORM retention.
+     - Domain: .gov domain + DNSSEC + HSTS preload; hook at hosting/DNS.
+     - Crypto: FIPS 140-3 validated module replaces the local SHA-256
+       primitive (see the js/store.js hook); TLS 1.2 minimum / 1.3
+       preferred for all transports (same endpoint helper, footer key).
+     - Email: SPF/DKIM/DMARC p=reject + MTA-STS for any product mail
+       (verification codes ride SMS in the real product, email stays
+       transactional) - hook at the mail sender, none exists here.
+     - Monitoring: FISMA continuous monitoring (audit logging, vuln
+       scanning, incident response) - the client-side hash-chained audit
+       log in this starter is the visible model, not the compliance control. */
   /* ---------- modal focus management ---------- */
   var modalReturnFocus = null;
   function modalFocusables(box) {
@@ -921,7 +956,7 @@
       '<span class="ref-code">' + esc(p.ref || "") + "</span>" +
       "<span>" + esc(dateShown(p)) + " \u00b7 " + esc(cycleLabel(cycle)) + "</span>" +
       statusChip(p.id) + "</div>" +
-      '<p class="post-body">' + esc(p.body) + "</p>" +
+      '<p class="post-body">' + esc(p.body) + "</p>" + sealHtml(p) +
       '<div class="post-actions">';
     if (open) {
       html += '<button type="button" class="vote-btn" data-post="' + esc(p.id) + '" aria-pressed="' + (voted ? "true" : "false") + '">' +
@@ -943,7 +978,8 @@
            place — no re-sort, no re-page, no snapshot rebuild. */
         var pid = btn.getAttribute("data-post");
         var prev = PodiumStore.userVoteInCycle(state, state.currentUserId, currentCycle());
-        PodiumStore.castVote(state, state.currentUserId, pid);
+        var vres = PodiumStore.castVote(state, state.currentUserId, pid);
+        if (vres) { var vp = PodiumStore.postById(state, pid); audit("vote", vp ? (vp.ref || pid) : pid, vres); }
         refreshVoteButtons(prev);
         refreshVoteButtons(pid);
       });
@@ -972,6 +1008,28 @@
     var s = String(a == null ? "" : a).replace(/^Sample committee response(\s*\([^)]*\))?:\s*/, "");
     if (!s) return s;
     return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  /* Post-integrity display (TY, Nov 3): recompute the stored hash at
+     display time. Match gives the short fingerprint (first 12 hex chars).
+     Mismatch (or a missing recorded hash) gives a tamper warning instead
+     of a verified fingerprint. Display-only; never mutates the post. */
+  function sealHtml(p) {
+    if (!p) return "";
+    var recomputed = PodiumStore.hashPost(state, p);
+    if (p.hash && p.hash === recomputed) {
+      return '<p class="hint">SHA-256 <span class="seal-code">' + esc(recomputed.slice(0, 12)) + "</span></p>";
+    }
+    return '<p class="gate-error">' + esc(T("sec.tamper")) + "</p>";
+  }
+  /* Audit logging (TY, Nov 3): every listed action appends a hash-chained
+     entry via the store; the chain is verified at display on the Status
+     tab. Log-only: a logging failure must never break the action. */
+  function audit(ev, ref, detail) {
+    try { PodiumStore.auditAppend(state, ev, ref || "", detail || "", etNow()); } catch (e) { /* log-only */ }
+  }
+  function auditEvLabel(ev) {
+    var k = "audit.ev." + ev, s = T(k);
+    return (s === k || !s) ? ev : s;
   }
 
   /* Thread view: the post plus its answer and updates, each with its code.
@@ -1711,7 +1769,7 @@
         return;
       }
       if (!PodiumStore.hasVoted(state, state.currentUserId, match.id)) {
-        PodiumStore.castVote(state, state.currentUserId, match.id);
+        var vresM = PodiumStore.castVote(state, state.currentUserId, match.id);         if (vresM) audit("vote", match.ref || match.id, vresM);
       }
       insteadBtn.textContent = T("vote.upvoted.check");
       renderFeed();
@@ -1723,7 +1781,7 @@
     bothBtn.addEventListener("click", function () {
       if (!state.currentUserId) return;
       if (match.cycleId === currentCycle() && !PodiumStore.hasVoted(state, state.currentUserId, match.id)) {
-        PodiumStore.castVote(state, state.currentUserId, match.id);
+        var vresB = PodiumStore.castVote(state, state.currentUserId, match.id);         if (vresB) audit("vote", match.ref || match.id, vresB);
       }
       renderFeed();
       publishBtn.focus();
@@ -1758,7 +1816,8 @@
     vb.textContent = PodiumStore.hasVoted(state, state.currentUserId, dup.id) ? T("vote.upvoted.check") : T("vote.upvoteit");
     vb.addEventListener("click", function () {
       if (!PodiumStore.hasVoted(state, state.currentUserId, dup.id)) {
-        PodiumStore.castVote(state, state.currentUserId, dup.id);
+        var vresD = PodiumStore.castVote(state, state.currentUserId, dup.id);
+        if (vresD) audit("vote", dup.ref || dup.id, vresD);
       }
       vb.textContent = T("vote.upvoted.check");
       renderFeed();
@@ -1783,6 +1842,7 @@
     var detectedLang = (liveGateCache && liveGateCache.text === text && liveGateCache.lang) ? liveGateCache.lang : "und";
     var post = PodiumStore.publishPost(state, state.currentUserId, currentCycle(), $("composerTopic").value, text, etNow(), detectedLang);
     if (!post) { updateOnePostNotice(); return; }
+    audit("post", post.ref, post.id);
     composerText.value = "";
     clearDraft();
     stopSpeak();
@@ -1947,6 +2007,9 @@
     var postExpander = zoneExpander("zone-post", T("zone.post.excerpt"), T("zone.post.full"),
       esc(briefExcerpt(p.body)), esc(p.body), T("zone.post.read"));
     li.appendChild(postExpander);
+    var postSeal = document.createElement("div");
+    postSeal.innerHTML = sealHtml(p);
+    li.appendChild(postSeal);
     var translateSlot = document.createElement("div");
     translateSlot.className = "translate-slot";
     translateSlot.setAttribute("data-post", p.id);
@@ -1990,7 +2053,7 @@
       '<p><span class="ref-code">' + esc(p.ref || "") + "</span> <strong>" + esc(author.name) + "</strong>" + stateSuffix(p) + langSuffix(p) + " \u00b7 " + esc(Ttopic(p.topic)) + "</p>" +
       '<div class="zone zone-post"><span class="zone-label">' + esc(T("zone.post.next")) + "</span>" +
       "<blockquote>" + esc(p.body) + "</blockquote>" +
-      '<p class="hint">' + esc(Tf("next.selectedfor", { name: author.name })) + "</p></div>" +
+      '<p class="hint">' + esc(Tf("next.selectedfor", { name: author.name })) + "</p></div>" + sealHtml(p) +
       '<p class="hint">' + esc(Tf("next.answercoming", { date: briefingWednesday(cycle) })) + "</p>" +
       translateSlotHtml(p);
     li.appendChild(buildWonderZone(p));
@@ -2087,6 +2150,7 @@
         var rc = PodiumStore.recordCitations(state, p.id, wonderCitations[p.id] || [], !!wonderNoCommit[p.id]);
         if (!rc.ok) { trackerMsg(box, "cite.required"); return; }
         try { PodiumStore.save(state); } catch (e) { /* session-only fallback */ }
+        audit("approve", p.ref + "-A", "");
         wonderApproved[p.id] = true;
         delete wonderCitations[p.id];
         delete wonderNoCommit[p.id];
@@ -2149,6 +2213,7 @@
           return;
         }
         wonderDrafts[p.id] = draft;
+        audit("draft", p.ref + "-A", "");
         delete wonderApproved[p.id];
         delete wonderEdited[p.id];
         delete wonderCitations[p.id];
@@ -2551,7 +2616,7 @@
       '<p><span class="ref-code">' + esc(p.ref || "") + "</span></p>" +
       '<div class="zone zone-post"><span class="zone-label">' + esc(T("zone.post.final")) + "</span>" +
       "<blockquote>" + esc(p.body) + "</blockquote>" +
-      '<p class="hint">\u2014 ' + esc(author.name) + stateSuffix(p) + langSuffix(p) + " \u00b7 " + esc(Ttopic(p.topic)) + " \u00b7 " + votesLabel(p.votes) + "</p></div>" +
+      '<p class="hint">\u2014 ' + esc(author.name) + stateSuffix(p) + langSuffix(p) + " \u00b7 " + esc(Ttopic(p.topic)) + " \u00b7 " + votesLabel(p.votes) + "</p></div>" + sealHtml(p) +
       translateSlotHtml(p) +
       '<div class="zone zone-answer"><span class="zone-label">' + esc(T("thread.answer")) + "</span>" +
       '<p><span class="ref-code">' + esc(answerCode(p)) + "</span></p>" +
@@ -2582,6 +2647,26 @@
   function renderStatus() {
     threadSelect($("statusSelect"), renderStatusCard);
     renderStatusCard();
+    renderAudit();
+  }
+  /* Audit-log section (TY, Nov 3): newest entries first, each with its
+     timestamp, event, ref, and short hash, plus the chain-integrity line.
+     Display-only; the chain itself lives in the saved state. */
+  function renderAudit() {
+    var card = $("auditCard");
+    if (!card) return;
+    setText("auditHeading", T("audit.heading"));
+    var v = PodiumStore.verifyAudit(state.audit);
+    var html = "<p>" + esc(T("audit.lede")) + "</p>" +
+      '<p class="hint">' + esc(v.ok ? T("audit.intact") : Tf("audit.broken", { n: v.index })) + "</p>" +
+      '<ul class="updates">';
+    (state.audit || []).slice().reverse().forEach(function (e) {
+      html += "<li><strong>" + esc(e.t) + "</strong> \u00b7 " + esc(auditEvLabel(e.ev)) +
+        (e.ref ? ' \u00b7 <span class="ref-code">' + esc(e.ref) + "</span>" : "") +
+        ' \u00b7 <span class="ref-code">' + esc(String(e.h || "").slice(0, 12)) + "</span></li>";
+    });
+    html += "</ul>";
+    card.innerHTML = html;
   }
   function renderStatusCard() {
     var b = selectedBriefing("statusSelect");
@@ -2591,7 +2676,7 @@
     var card = $("statusCard");
     var html = "<h3>" + selectionTitle(b) + "</h3>" +
       '<p><span class="ref-code">' + esc(p.ref || "") + "</span> " + esc(author.name) + stateSuffix(p) + langSuffix(p) + " \u00b7 " + esc(T("prior.status")) + ' <span class="status-pill">' + esc(Tstatus(b.trackerStatus)) + "</span>" +
-      (b.trackerStatus === "No Action" && b.officialReason ? " \u2014 " + esc(b.officialReason) : "") + "</p>" +
+      (b.trackerStatus === "No Action" && b.officialReason ? " \u2014 " + esc(b.officialReason) : "") + "</p>" + sealHtml(p) +
       approverHtml(b) + citationsHtml(b, p) +
       "<h4>" + esc(T("status.dated")) + "</h4>" + '<ul class="updates">' +
       b.updates.map(function (u, i) { return "<li><span class=\"ref-code\">" + esc(updateCode(p, i)) + "</span> <strong>" + esc(u.date) + ":</strong> " + esc(u.text) + responsesHtml(b, p, "update", i) + "</li>"; }).join("") +
@@ -2928,6 +3013,9 @@
       '<p><span class="ref-code">' + esc(p.ref || "") + "</span>" + langSuffix(p) + "</p>" +
       "<blockquote>" + esc(p.body) + "</blockquote>";
     frag.appendChild(z);
+    var zSeal = document.createElement("div");
+    zSeal.innerHTML = sealHtml(p);
+    frag.appendChild(zSeal);
     if (item.answer) {
       var za = document.createElement("div");
       za.className = "zone zone-answer";
@@ -2974,6 +3062,9 @@
       '<p><span class="ref-code">' + esc(first.ref || "") + "</span></p>" +
       "<blockquote>" + esc(first.body) + "</blockquote>";
     nr.appendChild(z);
+    var zSeal = document.createElement("div");
+    zSeal.innerHTML = sealHtml(first);
+    nr.appendChild(zSeal);
     nr.appendChild(fullRecordButton(first.id, Tf("feed.fullrecord.ref", { ref: first.ref || "" })));
     return nr;
   }
@@ -3223,7 +3314,7 @@
     setText("statementsHeading", T("fine.statements"));
     setText("finePurpose", T("fine.purpose"));
     Array.prototype.forEach.call(document.querySelectorAll("#fineList li"), function (li, i) {
-      li.textContent = T("fine.li" + (i + 1));
+      li.textContent = (li.id === "fineLi21") ? T("fine.li21") : T("fine.li" + (i + 1));
     });
     setText("citizenStateLabel", T("citizen.state.label"));
     setAttr("citizenStateSel", "aria-label", T("citizen.state.aria"));
@@ -3295,6 +3386,8 @@
     setText("footerAboutText", T("brand.sub"));
     setText("footerProcess", T("footer.process"));
     setText("footerProcessChain", T("footer.process.chain"));
+    setText("footerSecurity", T("footer.security"));
+    setText("footerSecurityNote", T("footer.security.note"));
     setText("footerNotices", T("footer.notices"));
     setHtml("footerStarterNotice", T("footer.starternotice"));
     setText("apiKeyLabel", T("footer.key"));
@@ -3361,6 +3454,15 @@
     setText("committeeHeading", T("tab.committee"));
     setText("committeeLede", T("committee.lede"));
     setText("committeeNote", T("committee.note"));
+    setText("committeeRulesSummary", T("committee.rules.summary"));
+    setText("committeeRulesSelectionH", T("committee.rules.selection.heading"));
+    setText("committeeRulesSelectionB", T("committee.rules.selection.body"));
+    setText("committeeRulesPayH", T("committee.rules.pay.heading"));
+    setText("committeeRulesPayB", T("committee.rules.pay.body"));
+    setText("committeeRulesStructureH", T("committee.rules.structure.heading"));
+    setText("committeeRulesStructureB", T("committee.rules.structure.body"));
+    setText("committeeRulesScheduleH", T("committee.rules.schedule.heading"));
+    setText("committeeRulesScheduleB", T("committee.rules.schedule.body"));
     var list = $("committeeList");
     if (!list) return;
     var members = (PodiumStore.loadCommittee().members || []).slice()
