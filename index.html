@@ -22,6 +22,9 @@
     </div>
     <div class="citizen-box">
       <span class="citizen-chip" id="citizenChip">Not signed in</span>
+      <button type="button" class="btn btn-small" id="signinBtn">Sign in</button>
+      <button type="button" class="btn btn-small" id="signupBtn">Sign up</button>
+      <button type="button" class="btn btn-small" id="signoutBtn" hidden>Sign out</button>
 
       <label id="citizenStateWrap" hidden><span id="citizenStateLabel">State</span>
         <select id="citizenStateSel" aria-label="Your state" title="Optional: your stated state, stored on this device only."></select>
@@ -297,6 +300,31 @@
   </div>
 </div>
 
+<!-- Citizen sign-in / sign-up modal (mock local account) -->
+<div class="modal-backdrop" id="citizenModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="citizenModalTitle">
+    <h3 id="citizenModalTitle">Sign in</h3>
+    <div id="mockSigninView">
+      <div id="mockCitizenList"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="mockShowSignup">Sign up</button>
+      </div>
+    </div>
+    <div id="mockSignupView" hidden>
+      <p><label id="mockNameLabel" for="mockNameInput">Display name</label>
+        <input type="text" id="mockNameInput" maxlength="60" autocomplete="off"></p>
+      <p><label id="mockStateLabel" for="mockStateSel">State</label>
+        <select id="mockStateSel" aria-label="State"></select></p>
+      <p class="hint" id="mockBrowserNote">This account lives only in this browser. No real verification, no server.</p>
+      <p class="hint" id="mockExistsNote" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="mockShowSignin">Back to sign in</button>
+        <button type="button" class="btn btn-primary" id="mockSignupBtn">Sign up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <script src="js/seed.js"></script>
 <script src="js/ai-adapter.js"></script>
@@ -305,5 +333,6 @@
 <script src="js/app.js"></script>
 </body>
 </html>
+
 
 

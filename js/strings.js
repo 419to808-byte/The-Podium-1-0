@@ -28,6 +28,14 @@ var PodiumStrings = (function () {
     "citizen.state.aria": { en: "Your state", es: "Tu estado" },
     "citizen.state.title": { en: "Optional: your stated state, stored on this device only.", es: "Opcional: tu estado declarado, guardado solo en este dispositivo." },
     "citizen.state.unset": { en: "State not set", es: "Estado sin definir" },
+    "citizen.signedout": { en: "Not signed in", es: "Sesi\u00f3n no iniciada" },
+    "citizen.signin": { en: "Sign in", es: "Iniciar sesi\u00f3n" },
+    "citizen.signout": { en: "Sign out", es: "Cerrar sesi\u00f3n" },
+    "mock.signup": { en: "Sign up", es: "Crear cuenta" },
+    "mock.name": { en: "Display name", es: "Nombre visible" },
+    "mock.browsernote": { en: "This account lives only in this browser. No real verification, no server.", es: "Esta cuenta vive solo en este navegador. Sin verificaci\u00f3n real, sin servidor." },
+    "mock.exists": { en: "An account already exists in this browser. Sign in with it, or clear this site's data to start over.", es: "Ya existe una cuenta en este navegador. Inicia sesi\u00f3n con ella o borra los datos de este sitio para empezar de nuevo." },
+    "mock.tosignin": { en: "Back to sign in", es: "Volver a iniciar sesi\u00f3n" },
     "lang.label": { en: "Language", es: "Idioma" },
     /* tabs */
     "tab.feed": { en: "Live Feed", es: "Feed en vivo" },
@@ -209,6 +217,7 @@ var PodiumStrings = (function () {
 
     "notice.published.a": { en: "<strong>Each citizen may submit one post per weekly cycle.</strong> You already published this week (", es: "<strong>Cada ciudadano puede presentar una publicaci\u00f3n por ciclo semanal.</strong> Ya publicaste esta semana (" },
     "notice.published.b": { en: "). You can still vote on this week\u2019s posts.", es: "). Todav\u00eda puedes votar por las publicaciones de esta semana." },
+    "notice.signin": { en: "<strong>Sign in to post.</strong> Sign up or sign in with your local account to address the nation. ", es: "<strong>Inicia sesi\u00f3n para publicar.</strong> Reg\u00edstrate o inicia sesi\u00f3n con tu cuenta local para dirigirte a la naci\u00f3n. " },
     "post.topic": { en: "Topic", es: "Tema" },
     "post.topic.hint": { en: "Pick a topic, or accept the single AI suggestion at review.", es: "Elige un tema o acepta la \u00fanica sugerencia de la IA en la revisi\u00f3n." },
     "post.timer.hint": { en: "read-aloud time \u00b7 max 630 words", es: "tiempo de lectura \u00b7 m\u00e1x. 630 palabras" },
@@ -614,3 +623,4 @@ var PodiumStrings = (function () {
   function sync() { lang = current(); return lang; }
   return { LANG_KEY: LANG_KEY, t: t, tf: tf, tes: tes, topicEs: topicEs, statusEs: statusEs, set: set, get: get, sync: sync };
 })();
+

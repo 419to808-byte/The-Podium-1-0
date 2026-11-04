@@ -25,14 +25,19 @@
   /* Committee store: load on startup; establish the key once so the empty
      roster persists (missing/corrupt payloads start empty, other data aside). */
   PodiumStore.saveCommittee(PodiumStore.loadCommittee());
-  /* The Podium 1.0 ships with no citizens: ensure the single signed-in local
-     user on every boot (persisted afterward like any state). No identity
-     picker, no citizen list. */
-  if (!state.citizens.length) { state.citizens.push({ id: "citizen", name: "Citizen", state: "" }); }
-  if (!state.currentUserId || !state.citizens.some(function (c) { return c.id === state.currentUserId; })) {
-    state.currentUserId = state.citizens[0].id;
-    PodiumStore.save(state);
-  }
+  /* Signed-out is the default: no placeholder citizen is fabricated and no
+     one is auto-signed-in. Fresh profiles boot with currentUserId null (as
+     load() provides) and stay signed out until sign-up or sign-in. A
+     one-time migration clears a persisted placeholder sign-in (id
+     "citizen"); the stub record stays in state.citizens purely as
+     author-attribution for posts already published under it. */
+  (function () {
+    var hasStub = state.citizens.some(function (c) { return c && c.id === "citizen" && c.name === "Citizen"; });
+    if (hasStub && state.currentUserId === "citizen") {
+      state.currentUserId = null;
+      PodiumStore.save(state);
+    }
+  })();
   var currentView = "feed";
 
   function $(id) { return document.getElementById(id); }
@@ -109,6 +114,14 @@
     "citizen.state.aria": "Your state",
     "citizen.state.title": "Optional: your stated state, stored on this device only.",
     "citizen.state.unset": "State not set",
+    "citizen.signedout": "Not signed in",
+    "citizen.signin": "Sign in",
+    "citizen.signout": "Sign out",
+    "mock.signup": "Sign up",
+    "mock.name": "Display name",
+    "mock.browsernote": "This account lives only in this browser. No real verification, no server.",
+    "mock.exists": "An account already exists in this browser. Sign in with it, or clear this site's data to start over.",
+    "mock.tosignin": "Back to sign in",
     "lang.label": "Language",
     /* tabs */
     "tab.feed": "Live Feed",
@@ -292,6 +305,7 @@
 
     "notice.published.a": "<strong>Each citizen may submit one post per weekly cycle.</strong> You already published this week (",
     "notice.published.b": "). You can still vote on this week\u2019s posts.",
+    "notice.signin": "<strong>Sign in to post.</strong> Sign up or sign in with your local account to address the nation. ",
     "post.topic": "Topic",
     "post.topic.hint": "Pick a topic, or accept the single AI suggestion at review.",
     "post.timer.hint": "read-aloud time \u00b7 max 630 words",
@@ -643,7 +657,7 @@
     if (name === "status") renderStatus();
     if (name === "committee") renderCommittee();
     if (name === "watch") { renderWatch(); } else { stopWatchPlayback(); }
-    if (name === "post") renderComposerGate();
+    if (name === "post") { updateOnePostNotice(); renderComposerGate(); }
     window.scrollTo(0, 0);
   }
   tabs.forEach(function (t) {
@@ -658,13 +672,47 @@
   function currentUser() {
     return state.currentUserId ? PodiumStore.citizenById(state, state.currentUserId) : null;
   }
-  /* The Podium 1.0 runs as a single signed-in local user: always signed in,
-     no switcher. State stays a plain optional profile field. */
+  /* Signed-out is the default: the header offers Sign in / Sign up until a
+     real citizen signs in. The id-"citizen" stub never counts as signed-in.
+     The committee demo character (R. Alvarez) counts as signed in while on
+     the committee face; the chip shows the committee record's name + state.
+     State stays a plain optional profile field. */
+  function signedInUser() {
+    var u = currentUser();
+    if (!u) return null;
+    if (u.id === DEMO_MEMBER_ID) {
+      var members = [];
+      try { members = PodiumStore.loadCommittee().members || []; } catch (e) { members = []; }
+      for (var i = 0; i < members.length; i++) {
+        if (members[i] && members[i].id === DEMO_MEMBER_ID) return members[i];
+      }
+      return null;
+    }
+    if (u.id === "citizen") return null;
+    for (var j = 0; j < state.citizens.length; j++) {
+      if (state.citizens[j] && state.citizens[j].id === u.id) {
+        return state.citizens[j].name ? state.citizens[j] : null;
+      }
+    }
+    return null;
+  }
   function renderCitizen() {
     var chip = $("citizenChip");
-    var me = currentUser() || { name: "Citizen", state: "" };
+    var me = signedInUser();
+    var si = $("signinBtn"), su = $("signupBtn"), so = $("signoutBtn");
+    if (!me) {
+      chip.textContent = T("citizen.signedout");
+      if (si) si.hidden = false;
+      if (su) su.hidden = false;
+      if (so) so.hidden = true;
+      $("citizenStateWrap").hidden = true;
+      return;
+    }
     chip.innerHTML = esc(T("citizen.signedin")) + " <strong>" + esc(me.name) + "</strong>" +
       (me.state ? " \u00b7 " + esc(me.state) : "");
+    if (si) si.hidden = true;
+    if (su) su.hidden = true;
+    if (so) so.hidden = false;
     $("citizenStateWrap").hidden = false;
     $("citizenStateSel").value = me.state || "";
   }
@@ -817,8 +865,8 @@
       sel.appendChild(o);
     });
     sel.addEventListener("change", function () {
-      var u = currentUser();
-      if (!u) return;
+      var u = signedInUser();
+      if (!u || u.id === DEMO_MEMBER_ID) return;
       u.state = sel.value || "";
       PodiumStore.save(state);
       renderCitizen();
@@ -1075,7 +1123,7 @@
   function attachCardButtons(list) {
     list.querySelectorAll(".vote-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        if (!state.currentUserId) return;
+        if (!signedInUser()) { openCitizenModal("signin"); return; }
         /* One vote per cycle, frozen pages: update the affected counts in
            place — no re-sort, no re-page, no snapshot rebuild. */
         var pid = btn.getAttribute("data-post");
@@ -1287,6 +1335,18 @@
 
   function updateOnePostNotice() {
     var box = $("onePostNotice");
+    if (!signedInUser()) {
+      box.hidden = false;
+      box.innerHTML = T("notice.signin");
+      var sb = document.createElement("button");
+      sb.type = "button";
+      sb.className = "btn btn-small";
+      sb.textContent = T("citizen.signin");
+      sb.addEventListener("click", function () { openCitizenModal("signin"); });
+      box.appendChild(sb);
+      $("composerForm").style.display = "none";
+      return;
+    }
     var existing = PodiumStore.userPostInCycle(state, state.currentUserId, currentCycle());
     if (existing) {
       box.hidden = false;
@@ -1865,7 +1925,7 @@
     insteadBtn.textContent = (state.currentUserId && PodiumStore.hasVoted(state, state.currentUserId, match.id))
       ? T("vote.upvoted.check") : T("voiced.instead");
     insteadBtn.addEventListener("click", function () {
-      if (!state.currentUserId) return;
+      if (!signedInUser()) { openCitizenModal("signin"); return; }
       if (match.cycleId !== currentCycle()) {
         insteadBtn.textContent = T("vote.closedweek");
         insteadBtn.disabled = true;
@@ -1882,7 +1942,7 @@
     bothBtn.className = "btn btn-small";
     bothBtn.textContent = T("voiced.both");
     bothBtn.addEventListener("click", function () {
-      if (!state.currentUserId) return;
+      if (!signedInUser()) { openCitizenModal("signin"); return; }
       if (match.cycleId === currentCycle() && !PodiumStore.hasVoted(state, state.currentUserId, match.id)) {
         var vresB = PodiumStore.castVote(state, state.currentUserId, match.id);         if (vresB) audit("vote", match.ref || match.id, vresB);
       }
@@ -1931,7 +1991,7 @@
   }
 
   function tryPublish(fromPreview) {
-    if (!state.currentUserId) return;
+    if (!signedInUser()) { openCitizenModal("signin"); return; }
     renderComposerGate();
     if (publishBtn.disabled && !fromPreview) return;
     var text = composerText.value.trim();
@@ -1994,7 +2054,7 @@
     pt.appendChild(useBtn);
   }
   $("previewBtn").addEventListener("click", function () {
-    if (!state.currentUserId) return;
+    if (!signedInUser()) { openCitizenModal("signin"); return; }
     var text = composerText.value.trim();
     if (!text) { composerText.focus(); return; }
     $("previewMeta").textContent = currentUser().name + " \u00b7 " + Ttopic($("composerTopic").value) + " \u00b7 " +
@@ -2019,14 +2079,124 @@
     openModal($("previewModal"));
   });
   $("previewClose").addEventListener("click", function () { closeModal($("previewModal")); });
+  /* ---------- citizen sign-in / sign-up (mock local account) ----------
+     Single-profile mock: name + optional state only, no email/password.
+     The sign-in view lists the stored real profile(s); with none stored it
+     falls through to sign-up. Closing: Escape or tapping the backdrop. */
+  var mockView = "signin";
+  function realCitizens() {
+    return state.citizens.filter(function (c) { return c && c.id !== "citizen" && c.name; });
+  }
+  function renderCitizenModalTexts() {
+    setText("citizenModalTitle", T(mockView === "signup" ? "mock.signup" : "citizen.signin"));
+    setText("mockNameLabel", T("mock.name"));
+    setAttr("mockNameInput", "aria-label", T("mock.name"));
+    setText("mockStateLabel", T("citizen.state.label"));
+    setAttr("mockStateSel", "aria-label", T("citizen.state.aria"));
+    setText("mockBrowserNote", T("mock.browsernote"));
+    setText("mockExistsNote", T("mock.exists"));
+    setText("mockSignupBtn", T("mock.signup"));
+    setText("mockShowSignup", T("mock.signup"));
+    setText("mockShowSignin", T("mock.tosignin"));
+  }
+  function openCitizenModal(view) {
+    mockView = (view === "signup") ? "signup" : "signin";
+    var real = realCitizens();
+    if (mockView === "signin" && !real.length) mockView = "signup";
+    var en = $("mockExistsNote");
+    if (en) en.hidden = true;
+    var siv = $("mockSigninView"), suv = $("mockSignupView");
+    if (siv) siv.hidden = (mockView !== "signin");
+    if (suv) suv.hidden = (mockView !== "signup");
+    if (mockView === "signin") {
+      var list = $("mockCitizenList");
+      if (list) {
+        list.innerHTML = "";
+        real.forEach(function (c) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "btn btn-small";
+          b.textContent = c.name + (c.state ? " \u00b7 " + c.state : "");
+          (function (rec) { b.addEventListener("click", function () { mockSignInAs(rec); }); })(c);
+          list.appendChild(b);
+        });
+      }
+    }
+    renderCitizenModalTexts();
+    openModal($("citizenModal"));
+  }
+  function mockSignUp() {
+    var nameEl = $("mockNameInput");
+    var name = nameEl ? nameEl.value.trim() : "";
+    if (!name) { if (nameEl) nameEl.focus(); return; }
+    if (realCitizens().length) {
+      var en = $("mockExistsNote");
+      if (en) en.hidden = false;
+      return;
+    }
+    var st = $("mockStateSel");
+    var id = "local-" + Date.now().toString(36);
+    var rec = { id: id, name: name, state: st ? (st.value || "") : "" };
+    state.citizens.push(rec);
+    state.currentUserId = id;
+    PodiumStore.save(state);
+    audit("signup", name, "");
+    if (nameEl) nameEl.value = "";
+    var en2 = $("mockExistsNote");
+    if (en2) en2.hidden = true;
+    closeModal($("citizenModal"));
+    renderCitizen();
+    renderCurrentView();
+  }
+  function mockSignInAs(c) {
+    if (!c || c.id === "citizen" || !c.name) return;
+    state.currentUserId = c.id;
+    PodiumStore.save(state);
+    audit("signin", c.name, "");
+    closeModal($("citizenModal"));
+    renderCitizen();
+    renderCurrentView();
+  }
+  function signOut() {
+    state.currentUserId = null;
+    try { window.localStorage.setItem(FACE_KEY, "civilian"); } catch (e) { /* private mode */ }
+    var fs = $("faceSel");
+    if (fs) fs.value = "civilian";
+    PodiumStore.save(state);
+    audit("signout", "", "");
+    renderCitizen();
+    renderCurrentView();
+  }
+  $("signinBtn").addEventListener("click", function () { openCitizenModal("signin"); });
+  $("signupBtn").addEventListener("click", function () { openCitizenModal("signup"); });
+  $("signoutBtn").addEventListener("click", function () { signOut(); });
+  $("mockShowSignup").addEventListener("click", function () { openCitizenModal("signup"); });
+  $("mockShowSignin").addEventListener("click", function () { openCitizenModal("signin"); });
+  $("mockSignupBtn").addEventListener("click", function () { mockSignUp(); });
+  $("citizenModal").addEventListener("click", function (e) { if (e.target === $("citizenModal")) closeModal($("citizenModal")); });
+  (function () {
+    var sel = $("mockStateSel");
+    if (!sel) return;
+    var o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = T("citizen.state.unset");
+    sel.appendChild(o0);
+    US_STATES.forEach(function (nm) {
+      var o = document.createElement("option");
+      o.value = nm;
+      o.textContent = nm;
+      sel.appendChild(o);
+    });
+  })();
   $("previewPublish").addEventListener("click", function () { tryPublish(true); });
   document.addEventListener("keydown", function (e) {
+    var openBox = !$("previewModal").hidden ? $("previewModal") : (!$("citizenModal").hidden ? $("citizenModal") : null);
     if (e.key === "Escape") {
-      if (!$("previewModal").hidden) { closeModal($("previewModal")); return; }
+      if (openBox) { closeModal(openBox); return; }
       return;
     }
     if (e.key !== "Tab") return;
-    var box = !$("previewModal").hidden ? $("previewModal") : null;
+    var box = openBox;
     if (!box) return;
     var f = modalFocusables(box);
     if (!f.length) return;
@@ -3539,6 +3709,10 @@
     setText("citizenStateLabel", T("citizen.state.label"));
     setAttr("citizenStateSel", "aria-label", T("citizen.state.aria"));
     setAttr("citizenStateSel", "title", T("citizen.state.title"));
+    setText("signinBtn", T("citizen.signin"));
+    setText("signupBtn", T("mock.signup"));
+    setText("signoutBtn", T("citizen.signout"));
+    renderCitizenModalTexts();
     setText("langLabel", T("lang.label"));
     setAttr("langSel", "aria-label", T("lang.label"));
     setAttr("view-feed", "aria-label", T("feed.aria"));
@@ -3990,3 +4164,6 @@
   })();
   handleDeepLink();
 })();
+
+
+
