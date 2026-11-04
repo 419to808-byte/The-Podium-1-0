@@ -1,4 +1,4 @@
-/* The Podium — UI wiring. No framework, no network calls. */
+﻿/* The Podium — UI wiring. No framework, no network calls. */
 (function () {
   "use strict";
 
@@ -415,10 +415,8 @@
     "wonder.unavailable": "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.",
     "wonder.approved": "Approved by committee",
     "wonder.nocites": "This draft carries no citations and no \u201cNo commitments in this answer\u201d declaration, so it cannot be approved.",
-    "wonder.request.label": "Agency request (send Saturday)",
-    "wonder.request.copy": "Copy request",
-    "wonder.request.copied": "Request copied \u2713",
-    "wonder.request.body": "To {agency}: {ask} (Re: post {ref}).",
+    "wonder.request": "Agency request \u2014 ready to send.",
+    "wonder.copy": "Copy request",
     "wonder.notapproval": "An AI suggestion is not a government approval.",
     "cite.legend": "Citations",
     "help.title": "Committee help",
@@ -2211,24 +2209,54 @@
       return T("wonder.pending");
     }
     function draftGate(d) { return !!(d && (d.noCommitments || (d.citations && d.citations.length))); }
+    function agencyRequestBlock(d) {
+      if (!d || !d.agencyRequest) return null;
+      var reqText = d.agencyRequest;
+      var reqBlock = document.createElement("div");
+      reqBlock.innerHTML = '<p><span class="zone-label">' + esc(T("wonder.request")) + '</span></p>' +
+        '<p>' + esc(reqText).replace(/\n/g, '<br>') + '</p>';
+      var copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "btn btn-small";
+      copyBtn.textContent = T("wonder.copy");
+      copyBtn.addEventListener("click", function () {
+        copyText(reqText, function (ok) {
+          copyBtn.textContent = ok ? T("share.copied") : T("share.failed");
+          setTimeout(function () { copyBtn.textContent = T("wonder.copy"); }, 2000);
+        });
+      });
+      reqBlock.appendChild(copyBtn);
+      return reqBlock;
+    }
+    function seedAgencyBlock(b) {
+      if (!b || !b.agencyRequest) return null;
+      var reqText = b.agencyRequest;
+      var reqBlock = document.createElement("div");
+      reqBlock.innerHTML = '<p><span class="zone-label">' + esc(T("wonder.request")) + '</span></p>' +
+        '<p>' + esc(reqText).replace(/\n/g, '<br>') + '</p>';
+      var copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "btn btn-small";
+      copyBtn.textContent = T("wonder.copy");
+      copyBtn.addEventListener("click", function () {
+        copyText(reqText, function (ok) {
+          copyBtn.textContent = ok ? T("share.copied") : T("share.failed");
+          setTimeout(function () { copyBtn.textContent = T("wonder.copy"); }, 2000);
+        });
+      });
+      reqBlock.appendChild(copyBtn);
+      return reqBlock;
+    }
     function showDraft() {
       var draft = wonderDrafts[p.id];
       if (!draft || decidedApproved || decidedDeclined) return;
-      var reqCopyText = requestText(draft);
-      /* Agency request (TY, Nov 4): Wonder supplies a ready-to-send request to
-         the agency the answer asks something of, as part of the draft envelope.
-         Read-only here — copied with the existing copy helper, never edited. */
-      function requestText(d) {
-        if (!d || !d.agencyRequest || !d.agencyRequest.agency || !d.agencyRequest.ask) return "";
-        return Tf("wonder.request.body", { agency: d.agencyRequest.agency, ask: d.agencyRequest.ask, ref: p.ref });
-      }
       var box = document.createElement("div");
       box.innerHTML = '<span class="zone-label">' + esc(draftLabel()) + "</span>" +
         "<p>" + esc(draft.text) + "</p>" +
         citationsHtml({ citations: draft.citations || [] }, p) +
-        (draft.noCommitments ? '<p class="hint">' + esc(T("cite.nocommit")) + "</p>" : "") +
-        (reqCopyText ? '<p><span class="zone-label">' + esc(T("wonder.request.label")) + "</span></p>" +
-          '<p data-wonder-request>' + esc(reqCopyText) + "</p>" : "");
+        (draft.noCommitments ? '<p class="hint">' + esc(T("cite.nocommit")) + "</p>" : "");
+      var reqPend = agencyRequestBlock(draft);
+      if (reqPend) box.appendChild(reqPend);
       var approveBtn = document.createElement("button");
       approveBtn.type = "button";
       approveBtn.className = "btn btn-small";
@@ -2316,22 +2344,6 @@
       box.appendChild(approveBtn);
       box.appendChild(document.createTextNode(" "));
       box.appendChild(declineBtn);
-      /* Agency-request copy control: copies the exact request text with the
-         existing copy helper (same copied/failed pattern as share links). */
-      if (reqCopyText) {
-        var reqCopyBtn = document.createElement("button");
-        reqCopyBtn.type = "button";
-        reqCopyBtn.className = "btn btn-small";
-        reqCopyBtn.textContent = T("wonder.request.copy");
-        reqCopyBtn.addEventListener("click", function () {
-          copyText(reqCopyText, function (ok) {
-            reqCopyBtn.textContent = ok ? T("wonder.request.copied") : T("share.failed");
-            setTimeout(function () { reqCopyBtn.textContent = T("wonder.request.copy"); }, 2000);
-          });
-        });
-        box.appendChild(document.createTextNode(" "));
-        box.appendChild(reqCopyBtn);
-      }
       if (!draftGate(draft)) {
         approveBtn.disabled = true;
         var gateHint = document.createElement("p");
@@ -2365,30 +2377,14 @@
     } else if ((wonderApproved[p.id] && wonderDrafts[p.id]) || decidedApproved) {
       var doneItem = PodiumStore.briefingItemFor(state, p.id) || {};
       var doneText = doneItem.answer || (wonderDrafts[p.id] && wonderDrafts[p.id].text) || "";
-      var doneReq = (doneItem.agencyRequest && doneItem.agencyRequest.agency && doneItem.agencyRequest.ask) ? doneItem.agencyRequest : ((wonderDrafts[p.id] && wonderDrafts[p.id].agencyRequest) || null);
-      var doneReqText = (doneReq && doneReq.agency && doneReq.ask) ? Tf("wonder.request.body", { agency: doneReq.agency, ask: doneReq.ask, ref: p.ref }) : "";
+      var reqDone = agencyRequestBlock(wonderDrafts[p.id]) || seedAgencyBlock(doneItem);
       var done = document.createElement("div");
       done.innerHTML = '<p><span class="status-pill">' + esc(T("wonder.approved")) + "</span></p>" +
         "<p>" + esc(displayAnswer(doneText)) + "</p>" +
         approverHtml(doneItem) + standingHtml(doneText) +
-        citationsHtml(doneItem, p) +
-        (doneReqText ? '<p><span class="zone-label">' + esc(T("wonder.request.label")) + "</span></p>" +
-          '<p data-wonder-request>' + esc(doneReqText) + "</p>" : "");
+        citationsHtml(doneItem, p);
       wireApproverLinks(done);
-      if (doneReqText) {
-        var doneCopyBtn = document.createElement("button");
-        doneCopyBtn.type = "button";
-        doneCopyBtn.className = "btn btn-small";
-        doneCopyBtn.textContent = T("wonder.request.copy");
-        doneCopyBtn.addEventListener("click", function () {
-          copyText(doneReqText, function (ok) {
-            doneCopyBtn.textContent = ok ? T("wonder.request.copied") : T("share.failed");
-            setTimeout(function () { doneCopyBtn.textContent = T("wonder.request.copy"); }, 2000);
-          });
-        });
-        done.appendChild(document.createTextNode(" "));
-        done.appendChild(doneCopyBtn);
-      }
+      if (reqDone) done.appendChild(reqDone);
       wonderBox.appendChild(done);
     } else if (wonderDrafts[p.id]) {
       showDraft();

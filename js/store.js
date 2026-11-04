@@ -678,7 +678,7 @@ var PodiumStore = (function () {
     if (!item) return { ok: false, reason: "no-item" };
     if (!String(text || "").trim()) return { ok: false, reason: "need-answer" };
     item.answer = String(text);
-    if (agencyReq && agencyReq.agency && agencyReq.ask) item.agencyRequest = { agency: String(agencyReq.agency), ask: String(agencyReq.ask) };
+    if (typeof agencyReq === "string" && agencyReq.trim()) item.agencyRequest = agencyReq;
     return { ok: true };
   }
   /* Decline record (TY, Nov 4): stamp a decline marker onto the briefing item

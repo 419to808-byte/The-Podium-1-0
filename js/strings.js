@@ -1,4 +1,4 @@
-/* The Podium — interface strings. en values are the verbatim current
+﻿/* The Podium — interface strings. en values are the verbatim current
    English chrome; es values are the Spanish translation. Post bodies,
    citizen names, states, reference codes, votes, numbers, and dates are
    NEVER translated here — only chrome. Gate verdict logic lives in
@@ -331,10 +331,8 @@ var PodiumStrings = (function () {
     "wonder.unavailable": { en: "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.", es: "Muse Wonder no est\u00e1 disponible (sin clave de sesi\u00f3n, o la llamada fall\u00f3) \u2014 no hay borrador disponible. Las respuestas nunca son redactadas por Spark." },
     "wonder.approved": { en: "Approved by committee", es: "Aprobada por el comit\u00e9" },
     "wonder.nocites": { en: "This draft carries no citations and no \u201cNo commitments in this answer\u201d declaration, so it cannot be approved.", es: "Este borrador no incluye citas ni la declaraci\u00f3n en ingl\u00e9s \u201cNo commitments in this answer\u201d (\u201cEsta respuesta no contiene compromisos\u201d), por lo que no puede aprobarse." },
-    "wonder.request.label": { en: "Agency request (send Saturday)", es: "Solicitud a la agencia (enviar el sábado)" },
-    "wonder.request.copy": { en: "Copy request", es: "Copiar solicitud" },
-    "wonder.request.copied": { en: "Request copied \u2713", es: "Solicitud copiada \u2713" },
-    "wonder.request.body": { en: "To {agency}: {ask} (Re: post {ref}).", es: "Para {agency}: {ask} (Sobre la publicación {ref})." },
+    "wonder.request": { en: "Agency request \u2014 ready to send.", es: "Solicitud a la agencia \u2014 lista para enviar." },
+    "wonder.copy": { en: "Copy request", es: "Copiar solicitud" },
     "wonder.notapproval": { en: "An AI suggestion is not a government approval.", es: "Una sugerencia de la IA no es una aprobaci\u00f3n del gobierno." },
     "help.title": { en: "Committee help", es: "Ayuda del comité" },
     "help.placeholder": { en: "Describe what is broken or what you need help with.", es: "Describe qué está roto o con qué necesitas ayuda." },

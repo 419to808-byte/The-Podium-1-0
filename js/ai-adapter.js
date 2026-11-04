@@ -1,4 +1,4 @@
-/* The Podium — AI adapter. ALL model calls go through PodiumAI.
+﻿/* The Podium — AI adapter. ALL model calls go through PodiumAI.
    mode "stub": realistic canned on-device checks, runs end-to-end with no
    key. mode "live": Meta Model API (Muse Spark for the composer gate,
    Muse Wonder for committee-answer drafts) once a session key is pasted
@@ -662,7 +662,7 @@ var PodiumAI = (function () {
     "Write ONLY the proposed answer itself. Do not include any sentence about the draft, its status, or whether it is final — no 'this draft...', 'this is a draft...', 'does not represent a final...' meta language of any kind. The interface labels the text as a draft pending committee review; the answer body must read as the proposed answer, nothing meta. " +
     "Never alter, reword, or comment on the post itself. Reply with ONLY the draft answer text, no prefix, no label, no quotation marks around the whole answer. " +
     "Add a 'Citations:' section listing one line per commitment in the exact form '- COMMITMENT | SOURCE | DATE' (commitment quote, agency or authority, date), or - if the answer makes no commitments - a line reading exactly 'No commitments in this answer.'. " +
-    "End with an 'Agency request:' line in the exact form 'Agency request: AGENCY | ASK' naming the agency the answer asks something of and the specific ask, so the committee can copy it and send it as-is. " +
+    "Then end your reply with its agency request: a final 'Agency request:' section of three lines in the exact form 'To: AGENCY' (the agency the answer asks something of), 'Ask: SPECIFIC ASK' (what the committee asks that agency to do, including asking the agency to report back in the first status-updates broadcast on or after the due date: name 'the status-updates broadcast', its date, and its slot time 'Wednesdays at 2:00 PM ET'), 'Post: REF' (this post's reference code) — or, if the answer asks nothing of any agency, a final line reading exactly 'No agency request.'" +
     "You suggest; the committee decides. Never write as the government.";
   function wonderChat(systemText, userText) {
     var t = WONDER_TRANSPORT;
@@ -690,35 +690,45 @@ var PodiumAI = (function () {
      (verbatim body, topic, ref, frozen authorState). Resolves the draft
      envelope { text, citations, noCommitments, agencyRequest } (no "Sample committee response:" prefix — the UI labels it
      as a draft), or null when Wonder is unavailable. */
-  /* Draft envelope: a draft arrives complete — the answer text plus its
-     citations, so the committee votes on it as written and never attaches
-     citations itself. parseDraftEnvelope splits the model reply into
-     { text, citations, noCommitments, agencyRequest }. Malformed citation
-     lines are dropped; a draft with neither valid citations nor the
-     declaration cannot be approved. The agency request arrives as a trailing
-     'Agency request: AGENCY | ASK' line (malformed lines dropped); the
-     committee copies it as-is and never edits it. */
+  /* Draft envelope (TY, Nov 3): a draft arrives complete — the answer text
+     plus its citations, so the committee votes on it as written and never
+     attaches citations itself. The model ends every draft with either a
+     'Citations:' section (one '- COMMITMENT | SOURCE | DATE' line per
+     commitment) or the exact line 'No commitments in this answer.'. The reply ends
+     with an agency-request section ('Agency request:' plus 'To:' / 'Ask:' / 'Post:' lines,
+     or the exact line 'No agency request.').
+     parseDraftEnvelope splits that envelope into { text, citations,
+     noCommitments, agencyRequest }. Malformed citation lines are dropped; a draft with
+     neither valid citations nor the declaration cannot be approved. The request
+     section is captured verbatim for the copy control; drafts without one
+     simply carry agencyRequest null (no vote-gate change). */
   var NO_COMMIT_LINE = "No commitments in this answer.";
+  var AGENCY_HEADER = "Agency request:";
+  var NO_REQUEST_LINE = "No agency request.";
   function parseDraftEnvelope(text) {
     var lines = String(text == null ? "" : text).replace(/\s+$/, "").split("\n");
-    var cites = [], noCommit = false, agencyReq = null, end = lines.length, i, t, dropped = {};
+    var cites = [], noCommit = false, agencyRequest = null, end = lines.length, i, t, dropped = {};
+    var req = [];
+    for (i = end - 1; i >= 0; i--) {
+      t = lines[i].trim();
+      if (!t) continue;
+      if (t.toLowerCase() === NO_REQUEST_LINE.toLowerCase()) { end = i; break; }
+      if (/^(to|ask|post)\s*:/i.test(t)) { req.unshift(lines[i].trim()); continue; }
+      if (t.toLowerCase() === AGENCY_HEADER.toLowerCase()) { if (req.length) agencyRequest = req.join("\n"); end = i; break; }
+      break;
+    }
     for (i = end - 1; i >= 0; i--) {
       t = lines[i].trim();
       if (!t) { end = i; continue; }
       if (t.toLowerCase() === NO_COMMIT_LINE.toLowerCase()) { noCommit = true; end = i; continue; }
-      if (t.toLowerCase().indexOf("agency request:") === 0) {
-        var aparts = t.slice("Agency request:".length).split("|");
-        var ag = aparts[0].trim(), ak = aparts.slice(1).join("|").trim();
-        if (ag && ak) { agencyReq = { agency: ag, ask: ak }; end = i; continue; }
-        dropped[i] = true;
-        continue;
-      }
       if (t.charAt(0) === "-") {
         var parts = t.slice(1).split("|");
         if (parts.length >= 3) {
           var cm = parts[0].trim().replace(/^["\u201c\u201d]+|["\u201c\u201d]+$/g, ""), sc = parts[1].trim(), dt = parts.slice(2).join("|").trim();
           if (cm && sc && dt) { cites.unshift({ commitment: cm, source: sc, date: dt, liaison: "" }); end = i; continue; }
         }
+        /* Malformed citation line: drop it (exclude from the answer text) and
+           keep scanning — valid citations around it still parse. */
         dropped[i] = true;
         continue;
       }
@@ -727,7 +737,7 @@ var PodiumAI = (function () {
     }
     if (cites.length) noCommit = false;
     var kept = lines.filter(function (ln, j) { return j < end && !dropped[j]; });
-    return { text: kept.join("\n").replace(/\s+$/, ""), citations: cites, noCommitments: cites.length ? false : noCommit, agencyRequest: agencyReq };
+    return { text: kept.join("\n").replace(/\s+$/, ""), citations: cites, noCommitments: cites.length ? false : noCommit, agencyRequest: agencyRequest };
   }
   /* Committee help box (TY, Nov 4): operational help for serving committee
      members only. NOT part of the answer flow — no draft, no vote, no
