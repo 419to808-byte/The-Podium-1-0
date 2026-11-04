@@ -3492,11 +3492,16 @@
     }
     return out;
   }
+  function committeeLineHtml() {
+    var full = T("approver.bycommittee"), name = T("approver.committee"), i = full.indexOf(name), html;
+    if (i < 0) html = esc(full);
+    else html = esc(full.slice(0, i)) + '<button type="button" class="btn btn-small approver-link">' + esc(name) + "</button>" + esc(full.slice(i + name.length));
+    return '<p class="hint">' + html + "</p>";
+  }
   function approverHtml(b) {
     var a = b && b.approvedBy;
     if (!a) return "";
-    return '<p class="hint">' + esc(T("approver.prefix")) + ' <button type="button" class="btn btn-small approver-link">' + esc(a.name || "") + "</button>, " + esc(a.state || "") +
-      " \u2014 " + esc(Tf("approver.suffix", { week: a.termWeek })) + "</p>";
+    return committeeLineHtml();
   }
   function wireApproverLinks(root) {
     if (!root || !root.querySelectorAll) return;

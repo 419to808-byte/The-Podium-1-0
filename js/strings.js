@@ -50,6 +50,8 @@ var PodiumStrings = (function () {
     "committee.draw.pos": { en: "Draw position", es: "Posici\u00f3n del sorteo" },
     "approver.prefix": { en: "Reviewed and approved by", es: "Revisado y aprobado por" },
     "approver.suffix": { en: "civilian committee member, Week {week} of 12", es: "miembro civil del comit\u00e9, semana {week} de 12" },
+    "approver.bycommittee": { en: "Reviewed and approved by the committee.", es: "Revisado y aprobado por el comit\u00e9." },
+    "approver.committee": { en: "the committee", es: "el comit\u00e9" },
     "approver.none": { en: "No committee member is serving yet.", es: "A\u00fan no hay ning\u00fan miembro del comit\u00e9 en funciones." },
     "approver.notserving": { en: "Only a serving committee member can approve answers.", es: "Solo un miembro del comit\u00e9 en funciones puede aprobar respuestas." },
     "committee.note": { en: "One citizen cycles out and one new citizen joins every week, so the committee is always 12 people with a mix of experience.", es: "Cada semana un ciudadano termina su mandato y uno nuevo se incorpora, de modo que el comit\u00e9 siempre tiene 12 personas con una mezcla de experiencia." },
