@@ -753,6 +753,13 @@ var PodiumStore = (function () {
     st.lastRotation = monISO;
     return { ran: true, reason: sel.ok ? "rotated" : sel.reason, store: st, added: added, cycledOut: out };
   }
+  /* Sunday 11:59 PM ET cutoff (TY, Nov 4): a past-votingEnd cycle is closed.
+     Callers pass the app ET now; a missing clock fails open. Mirrors the demo. */
+  function cycleVotingOpen(s, cycleId, nowEt) {
+    var c = cycleById(s, cycleId);
+    if (!c || !c.votingEnd || !nowEt) return true;
+    return !(c.votingEnd < etDay(nowEt));
+  }
 
   /* Standing cutoff rule: a post from a past cycle survives only if it was
      selected for a briefing (the top-voted winner or the random draw pick)
@@ -905,10 +912,12 @@ var PodiumStore = (function () {
     });
     return found;
   }
-  function castVote(s, voterId, postId) {
+  function castVote(s, voterId, postId, nowEt) {
     var p = postById(s, postId);
     if (!p) return null;
     if (!s.votes) s.votes = {};
+    /* Sunday 11:59 PM ET cutoff (TY, Nov 4): a past-votingEnd cycle is closed - the vote is rejected and nothing is recorded. Callers pass the app ET now; a missing clock fails open. Mirrors the demo. */
+    if (!cycleVotingOpen(s, p.cycleId, nowEt || null)) return "closed";
     var key = voterId + ":" + postId;
     if (s.votes[key]) {
       delete s.votes[key];
@@ -1062,6 +1071,7 @@ var PodiumStore = (function () {
 
   return {
     currentCycleId: currentCycleId,
+    cycleVotingOpen: cycleVotingOpen,
     load: load,
     save: save,
     loadCommittee: loadCommittee,

@@ -1097,7 +1097,7 @@
     li.className = "post" + (linked ? " is-linked" : "");
     if (linked) li.id = "linkedPost";
     var author = PodiumStore.citizenById(state, p.authorId);
-    var open = (p.cycleId === currentCycle());
+    var open = (p.cycleId === currentCycle()) && PodiumStore.cycleVotingOpen(state, p.cycleId, etNow());
     var voted = state.currentUserId ? PodiumStore.hasVoted(state, state.currentUserId, p.id) : false;
     var cycle = PodiumStore.cycleById(state, p.cycleId);
     var html = '<div class="post-meta"><span class="post-author">' + esc(author.name) +
@@ -1128,8 +1128,8 @@
            place — no re-sort, no re-page, no snapshot rebuild. */
         var pid = btn.getAttribute("data-post");
         var prev = PodiumStore.userVoteInCycle(state, state.currentUserId, currentCycle());
-        var vres = PodiumStore.castVote(state, state.currentUserId, pid);
-        if (vres) { var vp = PodiumStore.postById(state, pid); audit("vote", vp ? (vp.ref || pid) : pid, vres); }
+        var vres = PodiumStore.castVote(state, state.currentUserId, pid, etNow());
+        if (vres && vres !== "closed") { var vp = PodiumStore.postById(state, pid); audit("vote", vp ? (vp.ref || pid) : pid, vres); }
         refreshVoteButtons(prev);
         refreshVoteButtons(pid);
       });
@@ -1932,7 +1932,7 @@
         return;
       }
       if (!PodiumStore.hasVoted(state, state.currentUserId, match.id)) {
-        var vresM = PodiumStore.castVote(state, state.currentUserId, match.id);         if (vresM) audit("vote", match.ref || match.id, vresM);
+        var vresM = PodiumStore.castVote(state, state.currentUserId, match.id, etNow());         if (vresM && vresM !== "closed") audit("vote", match.ref || match.id, vresM);
       }
       insteadBtn.textContent = T("vote.upvoted.check");
       renderFeed();
@@ -1944,7 +1944,7 @@
     bothBtn.addEventListener("click", function () {
       if (!signedInUser()) { openCitizenModal("signin"); return; }
       if (match.cycleId === currentCycle() && !PodiumStore.hasVoted(state, state.currentUserId, match.id)) {
-        var vresB = PodiumStore.castVote(state, state.currentUserId, match.id);         if (vresB) audit("vote", match.ref || match.id, vresB);
+        var vresB = PodiumStore.castVote(state, state.currentUserId, match.id, etNow());         if (vresB && vresB !== "closed") audit("vote", match.ref || match.id, vresB);
       }
       renderFeed();
       publishBtn.focus();
@@ -1979,8 +1979,8 @@
     vb.textContent = PodiumStore.hasVoted(state, state.currentUserId, dup.id) ? T("vote.upvoted.check") : T("vote.upvoteit");
     vb.addEventListener("click", function () {
       if (!PodiumStore.hasVoted(state, state.currentUserId, dup.id)) {
-        var vresD = PodiumStore.castVote(state, state.currentUserId, dup.id);
-        if (vresD) audit("vote", dup.ref || dup.id, vresD);
+        var vresD = PodiumStore.castVote(state, state.currentUserId, dup.id, etNow());
+        if (vresD && vresD !== "closed") audit("vote", dup.ref || dup.id, vresD);
       }
       vb.textContent = T("vote.upvoted.check");
       renderFeed();
