@@ -10,7 +10,7 @@
 <body>
 <a class="skip-link" href="#main" id="skipLink">Skip to main content</a>
 
-<div class="gov-banner"><div class="wrap"><span class="flag-mark" aria-hidden="true"></span><span><span id="govText">An official website of the United States government</span> <span class="how-you-know" id="govHow">Here&rsquo;s how you know.</span></span></div><div class="wrap"><strong class="gov-qual">Starter — not an official U.S. government website.</strong></div></div>
+<div class="gov-banner"><div class="wrap"><span class="flag-mark" aria-hidden="true"></span><span><span id="govText">An official website of the United States government</span> <span class="how-you-know" id="govHow">Here&rsquo;s how you know.</span></span></div><div class="wrap"><strong class="gov-qual" id="govDemo">Demo — not an official U.S. government website.</strong></div></div>
 
 <header class="site-header">
   <div class="wrap header-row">
@@ -75,7 +75,10 @@
         <li>This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay publishes when that briefing airs. Prior Posts &amp; Answers and Status Updates list aired selections only.</li>
         <li>Sign-in here is a placeholder: this starter runs as a single local profile with no identity verification. Real identity verification is required before production use.</li>
         <li>Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.</li>
-        <li id="fineLi21">Security: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log.</li>
+        <li>Live activity: when 'Simulate live activity' is enabled, the feed shows AI-generated demonstration posts, clearly labeled. They are never voted on, never drawn, and never briefed.</li>
+    <li>Mock accounts: signing up stores a local profile in this browser only, with no real identity verification.</li>
+    <li>Real sign-in/sign-up: shown as a preview; the backend and text verification are not yet built.</li>
+    <li id="fineLi21">Security: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log.</li>
       </ul>
     </details>
   </section>
@@ -262,7 +265,7 @@
     </div>
     <div class="footer-col">
       <h2 id="footerProcess">The Process</h2>
-      <p id="footerProcessChain">Live Feed &#8594; The Weekly Briefing &#8594; Prior Posts &amp; Answers &#8594; Status Updates &#8594; Watch Live &#8594; Submit Post</p>
+      <p id="footerProcessChain">1. A citizen posts an idea or concern — 630 words max, gate-checked, final once published. 2. The community votes — each citizen casts one vote per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET. 3. At the cutoff the pool freezes; Monday at 12:00 PM ET the NIST Randomness Beacon draw picks one post at random. 4. The committee prepares answers and routes each selection to the correct branch and level. 5. Wednesday at 1:00 PM ET the briefing airs — the highest-voted post and the drawn post are read aloud word-for-word and discussed. 6. Approved answers are published, and follow-through is tracked in Status Updates until Answered, Action Promised, In Progress, Resolved — or No Action, with an official reason.</p>
     </div>
     <div class="footer-col">
       <h2 id="footerSecurity">Security</h2>

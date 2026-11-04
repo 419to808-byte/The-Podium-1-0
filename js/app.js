@@ -93,6 +93,7 @@
     "skip.main": "Skip to main content",
     "gov.text": "An official website of the United States government",
     "gov.how": "Here\u2019s how you know.",
+    "gov.demo": "Demo \u2014 not an official U.S. government website.",
     /* header */
     "brand.sub": "The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation.",
 
@@ -168,31 +169,34 @@
     "rule.reminder": "Reminder of the rule",
     "rule.p1": "By the rules of this portal, the highest-voted post <strong>MUST</strong> be read aloud \u2014 word for word, exactly as its author wrote it \u2014 and discussed, by a representative of the United States, in front of the entire country. Another post, drawn at random, must be read and discussed the same way.",
     "rule.p2": "AI will be used to detect profanity and errors, correct grammar, and suggest clearer formatting. It will never steer you: your topic, your position, or your meaning. And once your post is published, it is final.",
-    "rule.p3": "Keep in mind that your post may be read in front of the entire nation. Write in your most professional manner. Profanity, slang, and ridicule will not post. State your idea or concern plainly and professionally. You are not posting a comment. You are addressing the nation \u2014 speaking to and for every American. Give it the seriousness it deserves.",
-    "rule.p4": "Even if the committee cannot resolve an issue, it has at least brought light to the concern. That is the bare essential of this platform: to shine a light on concerns and ideas, and to try to resolve them or implement helpful changes.",
+    "rule.p3": "Keep in mind that your post may be read in front of the entire nation. Write in your most professional manner. Profanity, slang, and ridicule will not post. State your idea or concern plainly and professionally. You are not posting a comment. You are addressing the nation \u2014 speaking to and for every American. Treat it with the seriousness it deserves.",
+    "rule.p4": "Even if the committee cannot resolve an issue, it has at least brought light to the concern. That is the fundamental purpose of this platform: to shine a light on concerns and ideas, and to seek to resolve them or implement helpful changes.",
     "rule.readfull": "Read the full rule",
     /* fine print */
     "fine.summary": "Fine print (official register)",
     "fine.lede": "All submissions are subject to automated pre-publication review. Submissions containing profanity, slurs, or personal attacks shall not be published. Submissions containing slang or errors materially affecting comprehensibility shall be held pending correction by the submitting party, with suggested revisions provided for consideration; no submission shall be altered by the System without the submitting party\u2019s express action. Weekly selections shall consist of (i) the submission receiving the highest number of votes during the applicable period and (ii) one (1) submission selected by random drawing from among all eligible published submissions. Selected submissions shall be read aloud in their entirety, verbatim, and discussed in the weekly briefing. A published submission is final and shall not be edited or redacted.",
     "fine.statements": "Statements of policy, principles, and fundamentals",
     "fine.purpose": "The purpose of this platform is to ensure that every citizen has the opportunity to be heard by the nation. Citizens will address the nation and speak on its behalf.",
-    "fine.li1": "The highest-voted post and one randomly drawn post are read aloud word-for-word, in full, by a U.S. representative and discussed in the weekly briefing. No editor stands between author and nation. Nothing is edited after posting.",
-    "fine.li2": "AI detects problems and suggests wording before publication only. It never steers a post's topic, position, or meaning, and never changes, substitutes, or declines a post on its own.",
-    "fine.li3": "Profanity, slurs, and personal attacks are hard-blocked and never publish. Slang, misspellings, grammar, and unclear text are held with suggested rewording; the author accepts or retypes, and AI never silently changes text. Held drafts are not published, do not enter the draw, and do not use the citizen's one-post slot.",
+    "fine.li1": "The highest-voted post and one randomly drawn post are read aloud in full, word for word, by a representative of the United States and discussed in the weekly briefing. No editor stands between author and nation. Nothing is edited after posting.",
+    "fine.li2": "AI detects problems and suggests wording only before publication. It never steers a post's topic, position, or meaning, and never changes, substitutes, or declines a post on its own.",
+    "fine.li3": "Profanity, slurs, and personal attacks are blocked outright and never publish. Slang, misspellings, grammar, and unclear text are held with suggested rewording; the author accepts the suggestion or retypes the text, and AI never changes text silently. Held drafts are not published, do not enter the draw, and do not use the citizen's one-post slot.",
     "fine.li4": "Once published, a post is final. It cannot be deleted, withdrawn, archived, or hidden.",
-    "fine.li5": "Voting is upvote-only. One vote per citizen per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET.",
-    "fine.li6": "One post per citizen per weekly cycle.",
-    "fine.li7": "Posts are capped at 630 words.",
-    "fine.li8": "The random draw is rig-proof: the eligible pool is frozen in a fixed published order at the cutoff, and the position is the NIST Randomness Beacon value mod pool size, plus one. The draw is internal only, with no button, replay, or re-roll.",
-    "fine.li9": "The committee prepares answers only. It never alters, substitutes, delays, or declines a selection. It reviews selections a week ahead and routes each answer to the correct branch and level.",
+    "fine.li5": "Voting is upvote-only. Each citizen casts one vote per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET.",
+    "fine.li6": "Each citizen may submit one post per weekly cycle.",
+    "fine.li7": "Posts are limited to 630 words.",
+    "fine.li8": "The random draw is tamper-proof: the eligible pool is frozen in a fixed published order at the cutoff, and the position is the NIST Randomness Beacon value modulo the pool size, plus one. The draw is internal only, with no button, replay, or re-roll.",
+    "fine.li9": "The committee prepares answers only. It never alters, substitutes, delays, or declines a selection. It reviews selections one week in advance and routes each answer to the correct branch and level.",
     "fine.li10": "The committee does not fund. It asks for funds and allocates funds.",
     "fine.li11": "Committee answers begin as AI drafts that the committee votes on as written \u2014 never edited \u2014 and approves as the committee, the answerer of record; no individual member is named. AI never delivers a final answer alone and never touches a citizen post. The drafts are public: the public sees the drafts and the vote, not only approved answers.",
-    "fine.li12": "An exact-duplicate post in the same cycle does not create a new post; the citizen is offered an upvote on the existing post, with no post-anyway exit. The draw pool excludes the winner and any post exactly matching the winner. Similar-but-distinct posts are advisory only.",
-    "fine.li13": "The Live Feed shows the current cycle only. Past-cycle posts that were never selected are deleted; selected posts are kept as the briefing record.",
-    "fine.li14": "Posting and voting run Monday 12:00 AM to Sunday 11:59 PM ET. The pool freezes at the Sunday cutoff, the draw is Monday at 12:00 PM ET, the committee has the week plus a Monday-Tuesday buffer, and the briefing airs Wednesdays at 1:00 PM ET as the fixed opening segment.",
-    "fine.li15": "This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay publishes when that briefing airs. Prior Posts & Answers and Status Updates list aired selections only.",
-    "fine.li16": "Sign-in here is a placeholder: this starter runs as a single local profile with no identity verification. Real identity verification is required before production use.",
+    "fine.li12": "An exact-duplicate post in the same cycle does not create a new post; the citizen is offered an upvote on the existing post, with no option to post it anyway. The draw pool excludes the winner and any post exactly matching the winner. Posts that are similar but not identical receive only an advisory note.",
+    "fine.li13": "The Live Feed shows the current cycle only. Posts from past cycles that were never selected are deleted; selected posts are kept as the briefing record.",
+    "fine.li14": "Posting and voting run from Monday 12:00 AM to Sunday 11:59 PM ET. The pool freezes at the Sunday cutoff, the draw is Monday at 12:00 PM ET, the committee has the week plus a Monday\u2013Tuesday buffer, and the briefing airs Wednesdays at 1:00 PM ET as the fixed opening segment.",
+    "fine.li15": "This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay is published when that briefing airs. Prior Posts & Answers and Status Updates list aired selections only.",
+    "fine.li16": "Participation is limited to verified citizens; in this demo, verification is simulated only, and no real identification is collected or stored.",
     "fine.li17": "Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.",
+    "fine.li18": "Live activity: when \u2018Simulate live activity\u2019 is enabled, the feed shows AI-generated demonstration posts, clearly labeled. They are never voted on, never drawn, and never briefed.",
+    "fine.li19": "Mock accounts: signing up stores a local profile in this browser only, with no real identity verification.",
+    "fine.li20": "Real sign-in/sign-up: shown as a preview; the backend and text verification are not yet built.",
     /* feed */
     "feed.aria": "Feed of citizen posts",
     "feed.order": "Feed order",
@@ -208,7 +212,7 @@
     "feed.search": "Keyword search",
     "feed.search.ph": "e.g. bridges, school lunches",
     "feed.perpage": "Per page",
-    "feed.voterule": "One vote per citizen per week. You can change it until voting closes Sunday at 11:59 PM ET.",
+    "feed.voterule": "Each citizen casts one vote per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET.",
     "feed.prev": "\u2190 Prev",
     "feed.next": "Next \u2192",
     "feed.page": "Page",
@@ -393,7 +397,7 @@
     "zone.post.next": "Citizen Post \u2014 verbatim in full",
     "zone.post.final": "Citizen Post \u2014 verbatim, final",
     "next.selectedfor": "\u2014 {name} \u00b7 selected for next week\u2019s briefing",
-    "next.answercoming": "Answer coming {date}. The committee is still formulating it.",
+    "next.answercoming": "Approved answers are published as soon as the committee approves them.",
     "wonder.draft": "Draft answer with Wonder",
 
 
@@ -494,7 +498,7 @@
     /* footer */
     "footer.about": "About",
     "footer.process": "The Process",
-    "footer.process.chain": "Live Feed \u2192 The Weekly Briefing \u2192 Prior Posts & Answers \u2192 Status Updates \u2192 Watch Live \u2192 Submit Post",
+    "footer.process.chain": "1. A citizen posts an idea or concern \u2014 630 words max, gate-checked, final once published. 2. The community votes \u2014 each citizen casts one vote per weekly cycle, switchable until voting closes Sunday at 11:59 PM ET. 3. At the cutoff the pool freezes; Monday at 12:00 PM ET the NIST Randomness Beacon draw picks one post at random. 4. The committee prepares answers and routes each selection to the correct branch and level. 5. Wednesday at 1:00 PM ET the briefing airs \u2014 the highest-voted post and the drawn post are read aloud word-for-word and discussed. 6. Approved answers are published, and follow-through is tracked in Status Updates until Answered, Action Promised, In Progress, Resolved \u2014 or No Action, with an official reason.",
     "footer.notices": "Notices",
     "footer.starternotice": "<strong>Starter notice:</strong> sign-in is a placeholder; no real personal data is collected, requested, or stored. AI checks run locally until a Model API key is provided for the session. This starter ships with no users, posts, answers, or updates.",
     "footer.key": "Model API key",
@@ -2090,7 +2094,7 @@
       '<div class="zone zone-post"><span class="zone-label">' + esc(T("zone.post.next")) + "</span>" +
       "<blockquote>" + esc(p.body) + "</blockquote>" +
       '<p class="hint">' + esc(Tf("next.selectedfor", { name: author.name })) + "</p></div>" + sealHtml(p) +
-      '<p class="hint">' + esc(Tf("next.answercoming", { date: briefingWednesday(cycle) })) + "</p>" +
+      '<p class="hint">' + esc(T("next.answercoming")) + "</p>" +
       translateSlotHtml(p);
     li.appendChild(buildWonderZone(p));
     mountTranslateSlots(li);
@@ -3405,6 +3409,7 @@
     setText("skipLink", T("skip.main"));
     setText("govText", T("gov.text"));
     setText("govHow", T("gov.how"));
+    setText("govDemo", T("gov.demo"));
     setText("brandSub", T("brand.sub"));
     setAttr("mainNav", "aria-label", T("nav.primary"));
     document.querySelectorAll(".main-nav .tab").forEach(function (t) {
