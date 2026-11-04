@@ -1011,9 +1011,21 @@ var PodiumStore = (function () {
     if (!item) return { ok: false, reason: "no-item" };
     if (!f || !f.by) return { ok: false, reason: "need-citizen" };
     if (!String(f.solution || "").trim()) return { ok: false, reason: "need-solution" };
+    if (!String(f.dueDate || "").trim()) return { ok: false, reason: "need-duedate" };
+    /* Template fields: agency + ask parsed from the briefing item's stored
+       agency request ("To:" / "Ask:" lines, same shape the copy control
+       renders verbatim); the due date comes from the raise form (required)
+       because no structured date exists on the record. */
+    var ag = "", ak = "";
+    String(item.agencyRequest || "").split("\n").forEach(function (ln) {
+      var m1 = /^\s*To\s*:\s*(.+?)\s*$/.exec(ln), m2 = /^\s*Ask\s*:\s*(.+?)\s*$/.exec(ln);
+      if (m1 && !ag) ag = m1[1];
+      if (m2 && !ak) ak = m2[1];
+    });
+    if (!ag || !ak) return { ok: false, reason: "need-request" };
     var ch = item.challenges || (item.challenges = []);
     var c = { id: "ch" + (ch.length + 1), raisedBy: f.by, raisedName: f.name || "", date: f.date || "",
-      solution: String(f.solution), status: "open", answer: null };
+      solution: String(f.solution), agency: ag, ask: ak, dueDate: String(f.dueDate).trim(), status: "open", answer: null };
     ch.push(c);
     return { ok: true, challenge: c };
   }

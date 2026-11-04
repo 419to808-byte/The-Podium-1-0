@@ -400,6 +400,8 @@ var PodiumStrings = (function () {
     "challenge.answer.legend": { en: "Government answer", es: "Respuesta del gobierno" },
     "challenge.answer.ph": { en: "The government's specific answer…", es: "La respuesta específica del gobierno…" },
     "challenge.answer.submit": { en: "Record government answer", es: "Registrar respuesta del gobierno" },
+    "challenge.template.label": { en: "Agency challenge \u2014 copy and send.", es: "Desaf\u00edo a la agencia \u2014 copiar y enviar." },
+    "challenge.norequest": { en: "A challenge needs an agency request to challenge.", es: "Un desaf\u00edo necesita una solicitud a la agencia que desafiar." },
     "response.legend": { en: "Citizen response", es: "Respuesta ciudadana" },
     "response.submit": { en: "Respond", es: "Responder" },
     "response.ph": { en: "Write your response…", es: "Escribe tu respuesta…" },

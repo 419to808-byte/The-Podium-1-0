@@ -487,6 +487,8 @@
     "challenge.answer.legend": "Government answer",
     "challenge.answer.ph": "The government's specific answer…",
     "challenge.answer.submit": "Record government answer",
+    "challenge.template.label": "Agency challenge \u2014 copy and send.",
+    "challenge.norequest": "A challenge needs an agency request to challenge.",
     "response.legend": "Citizen response",
     "response.submit": "Respond",
     "response.ph": "Write your response…",
@@ -2626,10 +2628,48 @@
     }
     return out;
   }
+  /* Challenge template (TY, Nov 4): filled copy-and-paste block.
+     challengeTemplateText builds the plain-text block (real newlines);
+     challengeTemplateData fills agency/ask/solution/dueDate from the challenge
+     record, or from the briefing item's current agency request for
+     pre-change challenges lacking stored fields. */
+  function challengeTemplateText(agency, ask, solution, dueDate, ref) {
+    return "To: " + agency + "\n" +
+      "Challenge: We challenge " + agency + "'s position that it cannot " + ask + ".\n" +
+      "The solution is already mapped out: " + solution + ".\n" +
+      "Response required: " + agency + " must provide an additional response addressing this challenge, " +
+      "in the first status-updates broadcast on or after " + dueDate + " (Wednesdays at 2:00 PM ET). " +
+      "The response will be recorded on video and in writing.\n" +
+      "Post: " + ref;
+  }
+  function challengeTemplateData(b, ch) {
+    if (!ch || typeof ch.solution !== "string" || !ch.solution.trim()) return null;
+    var agency = ch.agency, ask = ch.ask, due = ch.dueDate;
+    if ((!agency || !ask) && b && typeof b.agencyRequest === "string") {
+      var m = /^\s*To\s*:\s*(.*?)\s*$/mi.exec(b.agencyRequest);
+      var a2 = /\bAsk\s*:\s*(.*?)\s*(?:Post\s*:|$)/is.exec(b.agencyRequest);
+      agency = agency || (m && m[1]) || "";
+      ask = ask || (a2 && a2[1]) || "";
+    }
+    due = due || "";
+    if (!agency || !ask || !due) return null;
+    return { agency: agency.trim(), ask: ask.trim(), solution: ch.solution.trim(), dueDate: String(due).trim() };
+  }
   function challengeHtml(b, p, ch) {
-    var out = '<div class="zone zone-answer"><span class="zone-label">' + esc(T("challenge.name")) + "</span>" +
-      "<p><strong>" + esc(T("challenge.solution.label")) + ":</strong> " + esc(ch.solution) + "</p>" +
-      '<p class="hint">' + esc(Tf("challenge.by", { name: ch.raisedName, date: ch.date })) + "</p>";
+    var out = '<div class="zone zone-answer"><span class="zone-label">' + esc(T("challenge.name")) + "</span>";
+    var tpl = challengeTemplateData(b, ch);
+    if (tpl) {
+      var shown = challengeTemplateText(esc(tpl.agency), esc(tpl.ask), esc(tpl.solution), esc(tpl.dueDate), esc(p.ref)).replace(/\n/g, "<br>");
+      out += '<p><span class="zone-label">' + esc(T("challenge.template.label")) + "</span></p>" +
+        "<p>" + shown + "</p>" +
+        '<div class="btn-row"><button type="button" class="btn btn-small" data-act="challenge-copy" data-id="' + esc(ch.id) + '">' + esc(T("wonder.copy")) + "</button></div>";
+    } else {
+      /* Pre-change record (no template fields, nothing derivable from the
+         briefing item): keep the old solution-paragraph form so the render
+         never breaks. */
+      out += "<p><strong>" + esc(T("challenge.solution.label")) + ":</strong> " + esc(ch.solution) + "</p>";
+    }
+    out += '<p class="hint">' + esc(Tf("challenge.by", { name: ch.raisedName, date: ch.date })) + "</p>";
     if (ch.status === "answered" && ch.answer) {
       out += '<p><span class="zone-label">' + esc(T("challenge.answer.legend")) + "</span></p>" +
         "<p>" + esc(ch.answer.text) + (ch.answer.date ? " (" + esc(ch.answer.date) + ")" : "") + "</p>" +
@@ -2655,9 +2695,16 @@
     var ch = (b && b.challenges) || [], out = "";
     out += '<p><span class="zone-label">' + esc(T("challenge.legend")) + "</span></p>";
     for (var i = 0; i < ch.length; i++) out += challengeHtml(b, p, ch[i]);
-    out += '<div class="field"><label>' + esc(T("challenge.solution.label")) + "</label>" +
-      '<textarea data-field="challenge-solution" rows="2" placeholder="' + esc(T("challenge.solution.ph")) + '"></textarea></div>' +
-      '<div class="btn-row"><button type="button" class="btn btn-small" data-act="challenge-raise">' + esc(T("challenge.raise")) + "</button></div>";
+    var hasReq = b && typeof b.agencyRequest === "string" && b.agencyRequest.trim();
+    if (!hasReq) {
+      out += '<p class="hint">' + esc(T("challenge.norequest")) + "</p>";
+    } else {
+      out += '<div class="field"><label>' + esc(T("challenge.solution.label")) + "</label>" +
+        '<textarea data-field="challenge-solution" rows="2" placeholder="' + esc(T("challenge.solution.ph")) + '"></textarea></div>' +
+        '<div class="field"><label>' + esc(T("advice.date")) + "</label>" +
+        '<input type="text" data-field="challenge-duedate" placeholder="' + esc(T("advice.date.ph")) + '"></div>' +
+        '<div class="btn-row"><button type="button" class="btn btn-small" data-act="challenge-raise">' + esc(T("challenge.raise")) + "</button></div>";
+    }
     return out;
   }
   function declinedHtml(b) {
@@ -2696,10 +2743,25 @@
     if (raise) raise.addEventListener("click", function () {
       var me = PodiumStore.citizenById(state, state.currentUserId);
       var sol = trackerVal(root, '[data-field="challenge-solution"]');
+      var due = trackerVal(root, '[data-field="challenge-duedate"]');
       if (!sol.trim()) { fail("form.required"); return; }
-      var r = PodiumStore.raiseChallenge(b, { by: state.currentUserId, name: me ? me.name : "", date: todayShort(), solution: sol });
+      if (!due.trim()) { fail("form.required"); return; }
+      var r = PodiumStore.raiseChallenge(b, { by: state.currentUserId, name: me ? me.name : "", date: todayShort(), solution: sol, dueDate: due });
       if (!r.ok) { fail("form.required"); return; }
       ok(rerender);
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-act="challenge-copy"]'), function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id"), ch = null;
+        var list = (b && b.challenges) || [];
+        for (var i = 0; i < list.length; i++) { if (list[i] && list[i].id === id) ch = list[i]; }
+        var tpl = ch && challengeTemplateData(b, ch);
+        if (!tpl) { fail("form.required"); return; }
+        copyText(challengeTemplateText(tpl.agency, tpl.ask, tpl.solution, tpl.dueDate, p.ref), function (ok) {
+          btn.textContent = ok ? T("share.copied") : T("share.failed");
+          setTimeout(function () { btn.textContent = T("wonder.copy"); }, 2000);
+        });
+      });
     });
     Array.prototype.forEach.call(root.querySelectorAll('[data-act="challenge-answer"]'), function (btn) {
       btn.addEventListener("click", function () {
