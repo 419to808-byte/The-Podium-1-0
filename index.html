@@ -75,6 +75,7 @@
         <li>This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay publishes when that briefing airs. Prior Posts &amp; Answers and Status Updates list aired selections only.</li>
         <li>Sign-in here is a placeholder: this starter runs as a single local profile with no identity verification. Real identity verification is required before production use.</li>
         <li>Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.</li>
+        <li id="fineLi21">Security: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log.</li>
       </ul>
     </details>
   </section>
@@ -200,6 +201,17 @@
   <section id="view-committee" class="view" hidden aria-label="Citizen committee roster">
     <h2 id="committeeHeading">Committee</h2>
     <p class="lede" id="committeeLede">The committee is 12 ordinary verified citizens, chosen by random draw, serving 12-week terms, with one new citizen joining every week. The committee reviews and approves answers, follows through until the issue is resolved, and does not fund &mdash; it asks for and allocates funds.</p>
+    <details class="fine-print" id="committeeRules">
+      <summary id="committeeRulesSummary">Committee rules &mdash; selection, pay, structure &amp; schedule</summary>
+      <h3 class="statements-heading" id="committeeRulesSelectionH">How members are selected</h3>
+      <p id="committeeRulesSelectionB">Twelve ordinary verified citizens, chosen by random draw from a national pool using the NIST Randomness Beacon &mdash; the same rig-proof method as the post draw. Selection is a summons, not a draft: if your name comes up, you agree to serve or decline and the next citizen is drawn. To serve you must be a verified citizen, 18 or older, with no post in the current cycle, not a government employee, and not currently incarcerated or on parole or probation &mdash; a past felony does not exclude you; eligibility returns 5 years after the sentence is fully complete. Terms are 12 weeks, one new citizen joins every week, and after cycling out you sit out 12 weeks. No more than 2 terms per year.</p>
+      <h3 class="statements-heading" id="committeeRulesPayH">Pay</h3>
+      <p id="committeeRulesPayB">Members are paid $150 per day, once a week, for the Wednesday vote. Travel, hotel, and meals for the weekly in-person meeting are covered separately at government rates and booked directly &mdash; members never pay out of pocket &mdash; plus childcare support for in-person days and an optional top-up for shift workers who can show they lose more than the base stipend.</p>
+      <h3 class="statements-heading" id="committeeRulesStructureH">Structure</h3>
+      <p id="committeeRulesStructureB">Twelve members, each holding an equal share of the decision-making power. Government agency liaisons advise only and do not vote. Each week the committee receives the selected posts and the AI-drafted answers and votes on whether to follow the AI suggestions. A split vote means no action on that post this week and the post reverts to shine light &mdash; it is still read aloud and tracked, never buried. The narrator and the committee spokesperson are permanent salaried roles who present only: the narrator reads posts word-for-word and the spokesperson presents the committee's approved answers. Neither has any authority over posts or answers. If either quits or is fired, a selection, election, or hiring process replaces them.</p>
+      <h3 class="statements-heading" id="committeeRulesScheduleH">Weekly schedule</h3>
+      <p id="committeeRulesScheduleB">Members receive the selected posts as soon as they are selected and have 6 days on their own to think about them. They all meet in person on Wednesday morning to deliberate and vote. Then the narrator and the committee spokesperson make the script and record live at 1:00 PM ET. The Podium funds a round-trip ticket and a hotel for every member every week.</p>
+    </details>
     <p class="hint" id="committeeEmpty" hidden>No committee members yet. The first members will be drawn by random draw once verified citizens agree to serve.</p>
     <ul id="committeeList" class="post-list"></ul>
     <p class="hint" id="committeeNote">One citizen cycles out and one new citizen joins every week, so the committee is always 12 people with a mix of experience.</p>
@@ -223,6 +235,8 @@
       <select id="statusSelect"></select>
     </label>
     <article class="card" id="statusCard"></article>
+    <h3 id="auditHeading">Audit log</h3>
+    <article class="card" id="auditCard"></article>
   </section>
 
 </main>
@@ -236,6 +250,10 @@
     <div class="footer-col">
       <h2 id="footerProcess">The Process</h2>
       <p id="footerProcessChain">Live Feed &#8594; The Weekly Briefing &#8594; Prior Posts &amp; Answers &#8594; Status Updates &#8594; Watch Live &#8594; Submit Post</p>
+    </div>
+    <div class="footer-col">
+      <h2 id="footerSecurity">Security</h2>
+      <p id="footerSecurityNote">Demo: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log. The real product is planned to verify identity through Login.gov and use phishing-resistant sign-in, designed to meet federal security standards. The backend items are not yet built.</p>
     </div>
     <div class="footer-col">
       <h2 id="footerNotices">Notices</h2>

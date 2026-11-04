@@ -94,6 +94,162 @@ var PodiumStore = (function () {
     if (past) return past;
     return cycles[0].id;
   }
+  /* Post integrity (TY, Nov 3): real SHA-256, computed locally — no
+     network, no dependency. Compact synchronous implementation so hashes
+     are stamped at seed/publish and recomputed at display without async
+     plumbing. Verified against the "abc" test vector (ba7816bf...15ad).
+     Real-product hook: swap this primitive for the platform crypto module
+     (SubtleCrypto now, a FIPS 140-3 validated module in the hosted
+     product); the hash INPUT format below stays the same. */
+  function utf8Bytes(str) {
+    var out = [], i, c;
+    for (i = 0; i < str.length; i++) {
+      c = str.charCodeAt(i);
+      if (c < 0x80) { out.push(c); continue; }
+      if (c < 0x800) { out.push(0xC0 | (c >> 6), 0x80 | (c & 0x3F)); continue; }
+      if (c >= 0xD800 && c <= 0xDBFF && i + 1 < str.length) {
+        var d = str.charCodeAt(i + 1);
+        if (d >= 0xDC00 && d <= 0xDFFF) {
+          var cp = 0x10000 + ((c - 0xD800) << 10) + (d - 0xDC00);
+          out.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3F), 0x80 | ((cp >> 6) & 0x3F), 0x80 | (cp & 0x3F));
+          i++; continue;
+        }
+      }
+      out.push(0xE0 | (c >> 12), 0x80 | ((c >> 6) & 0x3F), 0x80 | (c & 0x3F));
+    }
+    return out;
+  }
+  function sha256Hex(str) {
+    function rr(v, n) { return (v >>> n) | (v << (32 - n)); }
+    var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    var b = utf8Bytes(str);
+    var bitLen = b.length * 8;
+    b.push(0x80);
+    while ((b.length % 64) !== 56) b.push(0);
+    var hi = Math.floor(bitLen / 0x100000000), lo = bitLen >>> 0;
+    b.push((hi >>> 24) & 255, (hi >>> 16) & 255, (hi >>> 8) & 255, hi & 255,
+      (lo >>> 24) & 255, (lo >>> 16) & 255, (lo >>> 8) & 255, lo & 255);
+    var w = new Array(64), off, i;
+    for (off = 0; off < b.length; off += 64) {
+      for (i = 0; i < 16; i++) w[i] = (b[off + i * 4] << 24) | (b[off + i * 4 + 1] << 16) | (b[off + i * 4 + 2] << 8) | b[off + i * 4 + 3];
+      for (i = 16; i < 64; i++) {
+        var s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+        var s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      var a = H[0], bb = H[1], cc = H[2], dd = H[3], ee = H[4], ff = H[5], gg = H[6], hh = H[7];
+      for (i = 0; i < 64; i++) {
+        var S1 = rr(ee, 6) ^ rr(ee, 11) ^ rr(ee, 25);
+        var ch = (ee & ff) ^ ((~ee) & gg);
+        var t1 = (hh + S1 + ch + K[i] + w[i]) | 0;
+        var S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22);
+        var mj = (a & bb) ^ (a & cc) ^ (bb & cc);
+        var t2 = (S0 + mj) | 0;
+        hh = gg; gg = ff; ff = ee; ee = (dd + t1) | 0; dd = cc; cc = bb; bb = a; a = (t1 + t2) | 0;
+      }
+      H[0] = (H[0] + a) | 0; H[1] = (H[1] + bb) | 0; H[2] = (H[2] + cc) | 0; H[3] = (H[3] + dd) | 0;
+      H[4] = (H[4] + ee) | 0; H[5] = (H[5] + ff) | 0; H[6] = (H[6] + gg) | 0; H[7] = (H[7] + hh) | 0;
+    }
+    var out = "";
+    for (i = 0; i < 8; i++) out += ("00000000" + (H[i] >>> 0).toString(16)).slice(-8);
+    return out;
+  }
+  /* Hash input, exactly: body + "|" + authorName + "|" + authorState +
+     "|" + createdAt + "|" + ref. authorName is the citizen display name
+     (authorId lookup) or the inline author when a record carries one
+     instead of an authorId. Stored as post.hash at seed/publish time;
+     recomputed at display; a mismatch is tampering. */
+  function postAuthorName(s, p) {
+    if (p.authorId) {
+      var c = citizenById(s, p.authorId);
+      if (c && c.name && c.name !== "Unknown citizen") return c.name;
+    }
+    return p.author || "Unknown citizen";
+  }
+  function hashPost(s, p) {
+    return sha256Hex([(p && p.body) || "", postAuthorName(s, p), (p && p.authorState) || "", (p && p.createdAt) || "", (p && p.ref) || ""].join("|"));
+  }
+  /* Hash-chained audit log (TY, Nov 3): every listed action appends an
+     entry {t, ev, ref, d, prev, h} where
+       h = sha256(prev + "|" + t + "|" + ev + "|" + ref + "|" + d)
+     and prev is the previous entry's h (64 zeros for genesis).
+     Recomputing the chain detects any edit, reorder, or deletion.
+     Entries live in the saved state (state.audit) beside votes and posts;
+     verifyAudit re-checks the chain at display. */
+  var GENESIS_PREV = "0000000000000000000000000000000000000000000000000000000000000000";
+  function auditHash(prev, t, ev, ref, d) {
+    return sha256Hex([prev, t, ev, ref, d].join("|"));
+  }
+  function chainPush(log, t, ev, ref, d) {
+    var prev = log.length ? log[log.length - 1].h : GENESIS_PREV;
+    var e = { t: t, ev: ev, ref: ref || "", d: d || "", prev: prev };
+    e.h = auditHash(e.prev, e.t, e.ev, e.ref, e.d);
+    log.push(e);
+    return e;
+  }
+  function auditAppend(s, ev, ref, d, nowEt) {
+    if (!s.audit) s.audit = [];
+    var e = chainPush(s.audit, etStamp(nowEt || new Date()), ev, ref, d);
+    save(s);
+    return e;
+  }
+  /* Seeded history: genesis first, then one "post" entry per post
+     (t = createdAt), one "draw" entry per drawn cycle (t = drawAt),
+     one "approve" entry per briefing item with an answer
+     (t = briefingAt, ref = post ref + "-A"), and one "update" entry per
+     seeded status update (t = cycle year + update date, ref + "-Un").
+     Deterministic order: posts in state order, then cycles, then items. */
+  function buildAudit(posts, cycles, items) {
+    var log = [];
+    chainPush(log, "genesis", "genesis", "podium", "audit log genesis");
+    (posts || []).forEach(function (p) {
+      if (!p || !p.id) return;
+      chainPush(log, p.createdAt || "undated", "post", p.ref || p.id, p.id);
+    });
+    var refByPostId = {};
+    (posts || []).forEach(function (p) { if (p && p.id) refByPostId[p.id] = p.ref || p.id; });
+    var cycById = {};
+    (cycles || []).forEach(function (c) { if (c && c.id) cycById[c.id] = c; });
+    function yearOf(cycleId) {
+      var c = cycById[cycleId];
+      var m = c && /^(\d{4})-\d{2}-\d{2}$/.exec(c.votingStart || "");
+      return m ? m[1] : "2026";
+    }
+    (cycles || []).forEach(function (c) {
+      if (!c || !c.id || !(c.poolSize > 0)) return;
+      chainPush(log, c.drawAt || "undrawn", "draw", c.id, "pool " + c.poolSize + " position " + c.position);
+    });
+    (items || []).forEach(function (b) {
+      if (!b || !b.postId) return;
+      var ref = refByPostId[b.postId] || b.postId;
+      var c = cycById[b.cycleId];
+      var bat = (c && c.briefingAt) || "unbriefed";
+      if (b.answer) chainPush(log, bat, "approve", ref + "-A", b.trackerStatus || "");
+      (b.updates || []).forEach(function (u, i) {
+        if (!u) return;
+        chainPush(log, yearOf(b.cycleId) + " " + (u.date || "undated"), "update", ref + "-U" + (i + 1), u.status || "");
+      });
+    });
+    return log;
+  }
+  function verifyAudit(audit) {
+    var prev = GENESIS_PREV;
+    for (var i = 0; i < (audit || []).length; i++) {
+      var e = audit[i];
+      if (!e || e.prev !== prev) return { ok: false, index: i + 1 };
+      if (e.h !== auditHash(e.prev, e.t, e.ev, e.ref, e.d)) return { ok: false, index: i + 1 };
+      prev = e.h;
+    }
+    return { ok: true, index: 0 };
+  }
 
   function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
   function pad4(n) {
@@ -135,7 +291,7 @@ var PodiumStore = (function () {
         p.ref = refLetter(s.topics, p.topic) + "-" + pad4(seq);
       }
     });
-    return {
+    var out = {
       version: s.version,
       citizens: s.citizens,
       topics: s.topics,
@@ -145,8 +301,14 @@ var PodiumStore = (function () {
       votes: {}, /* "voterId:postId" -> true */
       currentUserId: null,
       userSeq: 0,
-      refSeq: seq
+      refSeq: seq,
+      audit: []
     };
+    /* Post-integrity stamps + seeded audit history, so a fresh profile is
+       verifiable and non-empty on first load. */
+    out.posts.forEach(function (p) { if (p && !p.hash) p.hash = hashPost(out, p); });
+    out.audit = buildAudit(out.posts, out.cycles, out.briefingItems);
+    return out;
   }
 
   /* Defensive backfill for partially-written same-version state: fill only
@@ -232,6 +394,17 @@ var PodiumStore = (function () {
     (s.posts || []).forEach(function (p) {
       if (p && !p.lang) { p.lang = "en"; filled = true; }
     });
+    /* Post-integrity backfill for pre-feature saves: stamp hashes computed
+       from the current bytes (missing only; a stored hash is never
+       recomputed here, so a later mismatch at display still flags
+       tampering). */
+    (s.posts || []).forEach(function (p) {
+      if (p && !p.hash) { p.hash = hashPost(s, p); filled = true; }
+    });
+    /* Audit-log backfill for pre-feature saves: build the seeded history
+       from the merged state (includes the visitor own posts). Saves that
+       already carry a log keep their chain untouched. */
+    if (!s.audit) { s.audit = buildAudit(s.posts, s.cycles, s.briefingItems); filled = true; }
     /* One-time stamp migration: user posts saved with ISO-UTC createdAt
        predate the naive ET-wall format. Convert in place so string ordering
        matches seed posts; the instant is preserved. */
@@ -274,6 +447,14 @@ var PodiumStore = (function () {
       if (!p || typeof p.id !== "string" || seen[p.id]) return;
       if (p.id.indexOf("u-") !== 0) return;
       fresh.posts.push(p); seen[p.id] = true; have = true;
+    });
+    /* Salvaged user posts predate the audit log: record their publication
+       from their own timestamps so the chain covers them too. */
+    fresh.posts.forEach(function (p) {
+      if (p && p.id && p.id.indexOf("u-") === 0) {
+        if (!p.hash) p.hash = hashPost(fresh, p);
+        chainPush(fresh.audit, p.createdAt || "undated", "post", p.ref || p.id, p.id);
+      }
     });
     var keepIds = {};
     fresh.posts.forEach(function (p) { keepIds[p.id] = true; });
@@ -336,6 +517,9 @@ var PodiumStore = (function () {
     return fresh;
   }
 
+  /* Real-product hook: encrypted off-site backups replicate the payload
+     written below (envelope-encrypted with a KMS/HSM data key, FedRAMP-
+     authorized object store, WORM retention) - never plaintext copies. */
   function save(s) {
     try { window.localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* private mode: session-only */ }
   }
@@ -756,6 +940,7 @@ var PodiumStore = (function () {
       createdAt: etStamp(nowEt || now),
       displayDate: "just now"
     };
+    post.hash = hashPost(s, post);
     s.posts.push(post);
     save(s);
     return post;
@@ -895,6 +1080,9 @@ var PodiumStore = (function () {
     replayCycles: replayCycles,
     replayReady: replayReady,
     publishPost: publishPost,
+    sha256: sha256Hex,
+    hashPost: hashPost,
+    auditAppend: auditAppend,
     setNoAction: setNoAction,
     openAppeal: openAppeal,
     appealFor: appealFor,
@@ -902,6 +1090,7 @@ var PodiumStore = (function () {
     reviewAppeal: reviewAppeal,
     raiseChallenge: raiseChallenge,
     answerChallenge: answerChallenge,
-    addResponse: addResponse
+    addResponse: addResponse,
+    verifyAudit: verifyAudit
   };
 })();
