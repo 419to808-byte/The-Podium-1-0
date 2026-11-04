@@ -665,6 +665,30 @@ var PodiumStore = (function () {
     item.noCommitments = !!noCommit;
     return { ok: true, citations: item.citations };
   }
+  /* Answer record (TY, Nov 4): stamp the approved draft's text and agency
+     request onto the briefing item at approval, so the answer (and the
+     Saturday send's request text) survives reload. Session drafts are
+     ephemeral; the item is the record. A missing agency request is not a
+     failure — the request was never part of the Approve gate. */
+  function recordAnswer(state, postId, text, agencyReq) {
+    var items = (state && state.briefingItems) || [], item = null, i;
+    for (i = 0; i < items.length; i++) { if (items[i] && items[i].postId === postId) { item = items[i]; break; } }
+    if (!item) return { ok: false, reason: "no-item" };
+    if (!String(text || "").trim()) return { ok: false, reason: "need-answer" };
+    item.answer = String(text);
+    if (agencyReq && agencyReq.agency && agencyReq.ask) item.agencyRequest = { agency: String(agencyReq.agency), ask: String(agencyReq.ask) };
+    return { ok: true };
+  }
+  /* Decline record (TY, Nov 4): stamp a decline marker onto the briefing item
+     at decline, so a decided post stays decided across reload (a declined
+     draft is never re-drafted; the post reverts to shine light). */
+  function recordDecline(state, postId) {
+    var items = (state && state.briefingItems) || [], item = null, i;
+    for (i = 0; i < items.length; i++) { if (items[i] && items[i].postId === postId) { item = items[i]; break; } }
+    if (!item) return { ok: false, reason: "no-item" };
+    item.declined = true;
+    return { ok: true };
+  }
   /* Weekly rotation (runs on the Monday draw). Cycles out every termWeek >= 12
      member into pastMembers (kept, never deleted), draws ONE replacement from
      the eligible pool, adds them as term week 1 dated this Monday (+84d cycle-out),
@@ -1061,6 +1085,8 @@ var PodiumStore = (function () {
     drawCommitteeMember: drawCommitteeMember,
     recordApproval: recordApproval,
     recordCitations: recordCitations,
+    recordAnswer: recordAnswer,
+    recordDecline: recordDecline,
     rotateCommittee: rotateCommittee,
     citizenById: citizenById,
     postById: postById,

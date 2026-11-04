@@ -662,7 +662,8 @@ var PodiumAI = (function () {
     "Write ONLY the proposed answer itself. Do not include any sentence about the draft, its status, or whether it is final — no 'this draft...', 'this is a draft...', 'does not represent a final...' meta language of any kind. The interface labels the text as a draft pending committee review; the answer body must read as the proposed answer, nothing meta. " +
     "Never alter, reword, or comment on the post itself. Reply with ONLY the draft answer text, no prefix, no label, no quotation marks around the whole answer. " +
     "Add a 'Citations:' section listing one line per commitment in the exact form '- COMMITMENT | SOURCE | DATE' (commitment quote, agency or authority, date), or - if the answer makes no commitments - a line reading exactly 'No commitments in this answer.'. " +
-    "End with an 'Agency request:' line in the exact form 'Agency request: AGENCY | ASK' naming the agency the answer asks something of and the specific ask, so the committee can copy it and send it as-is.";
+    "End with an 'Agency request:' line in the exact form 'Agency request: AGENCY | ASK' naming the agency the answer asks something of and the specific ask, so the committee can copy it and send it as-is. " +
+    "You suggest; the committee decides. Never write as the government.";
   function wonderChat(systemText, userText) {
     var t = WONDER_TRANSPORT;
     var key = getKey();
