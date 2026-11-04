@@ -729,6 +729,18 @@ var PodiumAI = (function () {
     var kept = lines.filter(function (ln, j) { return j < end && !dropped[j]; });
     return { text: kept.join("\n").replace(/\s+$/, ""), citations: cites, noCommitments: cites.length ? false : noCommit, agencyRequest: agencyReq };
   }
+  /* Committee help box (TY, Nov 4): operational help for serving committee
+     members only. NOT part of the answer flow — no draft, no vote, no
+     citations, no agency request. Wonder answers system questions here;
+     a help response never touches a citizen post and never speaks for
+     the government. Same endpoint, key, and budget as drafts. */
+  var HELP_SYSTEM = "You are helping a committee member with the Podium system. Answer their question about how the system works, or explain what to do about the problem they describe. Keep the answer short and practical. You do not draft committee answers, you do not touch citizen posts, and you do not speak for the government.";
+  function askWonderHelp(question) {
+    if (!question || !String(question).trim() || !getKey()) return Promise.resolve(null);
+    return wonderChat(HELP_SYSTEM, String(question).trim()).then(function (text) {
+      return text || null;
+    });
+  }
   function draftCommitteeAnswer(post) {
     if (!post || !getKey()) return Promise.resolve(null);
     var user = "Reference code: " + (post.ref || "") + "\n" +
@@ -809,6 +821,7 @@ var PodiumAI = (function () {
     suggestTopicLive: suggestTopicLive,
     topicLabels: TOPIC_KEYWORDS.map(function (pair) { return pair[0]; }),
     draftCommitteeAnswer: draftCommitteeAnswer,
+    askWonderHelp: askWonderHelp,
     translatePost: translatePost,
     WONDER_MODEL: WONDER_TRANSPORT.model,
     getKey: getKey,

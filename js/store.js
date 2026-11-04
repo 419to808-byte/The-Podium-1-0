@@ -302,7 +302,8 @@ var PodiumStore = (function () {
       currentUserId: null,
       userSeq: 0,
       refSeq: seq,
-      audit: []
+      audit: [],
+      sysIssues: [], /* committee help-box system issues (tracked categories), oldest first */
     };
     /* Post-integrity stamps + seeded audit history, so a fresh profile is
        verifiable and non-empty on first load. */
@@ -324,6 +325,7 @@ var PodiumStore = (function () {
     if (!s.citizens) { s.citizens = needSeed().citizens; filled = true; }
     if (!s.topics) { s.topics = needSeed().topics; filled = true; }
     if (!s.briefingItems) { s.briefingItems = needSeed().briefingItems; filled = true; }
+    if (!s.sysIssues) { s.sysIssues = []; filled = true; }
     /* Seed-answer migration (TY, Oct 28): Ana's w1 answer changed from
        "will fund" to "will ask for funds … allocate the funds …". Saved
        states pin the old string, so refresh it — but only where it is
@@ -688,6 +690,17 @@ var PodiumStore = (function () {
     if (!item) return { ok: false, reason: "no-item" };
     item.declined = true;
     return { ok: true };
+  }
+  /* System issue record (TY, Nov 4): a tracked-category help request and
+     Wonder's answer, listed on the Status Updates tab so the committee can
+     follow through. How-to questions are answered in the box only. */
+  function recordSysIssue(state, category, question, answer, nowEt) {
+    var items = (state && state.sysIssues) || null;
+    if (!items) return { ok: false, reason: "no-store" };
+    if (!question || !String(question).trim()) return { ok: false, reason: "need-question" };
+    var issue = { t: etStamp(nowEt || new Date()), category: String(category || "other"), question: String(question), answer: String(answer || "") };
+    items.push(issue);
+    return { ok: true, issue: issue };
   }
   /* Weekly rotation (runs on the Monday draw). Cycles out every termWeek >= 12
      member into pastMembers (kept, never deleted), draws ONE replacement from
@@ -1087,6 +1100,7 @@ var PodiumStore = (function () {
     recordCitations: recordCitations,
     recordAnswer: recordAnswer,
     recordDecline: recordDecline,
+    recordSysIssue: recordSysIssue,
     rotateCommittee: rotateCommittee,
     citizenById: citizenById,
     postById: postById,

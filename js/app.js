@@ -399,6 +399,19 @@
     "wonder.request.body": "To {agency}: {ask} (Re: post {ref}).",
     "wonder.notapproval": "An AI suggestion is not a government approval.",
     "cite.legend": "Citations",
+    "help.title": "Committee help",
+    "help.placeholder": "Describe what is broken or what you need help with.",
+    "help.category.label": "What kind of problem is this?",
+    "help.cat.broken": "Something doesn't load or work",
+    "help.cat.data": "Wrong information shown",
+    "help.cat.howto": "I don't know how to do something",
+    "help.cat.other": "Something else",
+    "help.submit": "Ask Wonder for help",
+    "help.response.label": "Wonder's help",
+    "help.tracked": "Recorded as a system issue \u2014 the committee can track it on Status Updates.",
+    "help.answered": "Answered here \u2014 no further action needed.",
+    "help.issues": "System issues",
+    "help.unavailable": "Wonder is unavailable (no session key, or the call failed) \u2014 no help available.",
     "cite.commitment": "Commitment",
     "cite.source": "Source",
     "cite.remove": "Remove",
@@ -2700,9 +2713,28 @@
     });
     card.appendChild(link);
   }
+  /* System issues (TY, Nov 4): tracked-category help requests listed on the
+     Status Updates tab so the committee can follow through. How-to questions
+     stay in the help box and never appear here. */
+  function helpCatLabel(c) { var k = "help.cat." + (c || "other"); try { var s = T(k); return (s === k || !s) ? String(c || "") : s; } catch (e) { return String(c || ""); } }
+  function renderSysIssues() {
+    setText("sysIssuesHeading", T("help.issues"));
+    var card = $("sysIssuesCard"), head = $("sysIssuesHeading");
+    if (!card) return;
+    var list = (state.sysIssues || []).slice().reverse();
+    if (!list.length) { card.innerHTML = ""; card.hidden = true; if (head) head.hidden = true; return; }
+    card.hidden = false; if (head) head.hidden = false;
+    var html = '<ul class="updates">';
+    list.forEach(function (it) {
+      html += "<li><strong>" + esc(it.t || "") + "</strong> \u00b7 " + esc(helpCatLabel(it.category)) +
+        "<br>" + esc(it.question || "") + "<br>" + esc(it.answer || "") + "</li>";
+    });
+    card.innerHTML = html + "</ul>";
+  }
   function renderStatus() {
     threadSelect($("statusSelect"), renderStatusCard);
     renderStatusCard();
+    renderSysIssues();
     renderAudit();
   }
   /* Audit-log section (TY, Nov 3): newest entries first, each with its
@@ -3521,6 +3553,86 @@
   /* Committee roster (TY): empty-state tab plus stored-member list rendering.
      Structure only — the draw and rotation (Prompts 5-6) fill the data.
      Stored cycleOutDate is shown as-is (computed once when drawn). */
+  var HELP_CATS = ["broken", "data", "howto", "other"];
+  /* Committee help box (TY, Nov 4): a serving member describes what is broken
+     (or what they need help with); Wonder answers in the box. Every request +
+     response is audit-logged; broken / wrong-data / other reports are also
+     listed as system issues on the Status tab. How-to stays in the box.
+     Member text and Wonder text are rendered as text (never HTML). */
+  function renderHelpBox(box) {
+    box.innerHTML = "";
+    var head = document.createElement("p");
+    var headLabel = document.createElement("span");
+    headLabel.className = "zone-label";
+    headLabel.textContent = T("help.title");
+    head.appendChild(headLabel);
+    box.appendChild(head);
+    var catWrap = document.createElement("div");
+    catWrap.className = "field";
+    var catLabel = document.createElement("label");
+    catLabel.textContent = T("help.category.label");
+    var catSel = document.createElement("select");
+    catSel.setAttribute("data-help", "cat");
+    HELP_CATS.forEach(function (c) {
+      var o = document.createElement("option");
+      o.value = c;
+      o.textContent = T("help.cat." + c);
+      catSel.appendChild(o);
+    });
+    catLabel.appendChild(catSel);
+    catWrap.appendChild(catLabel);
+    box.appendChild(catWrap);
+    var qWrap = document.createElement("div");
+    qWrap.className = "field";
+    var qArea = document.createElement("textarea");
+    qArea.setAttribute("data-help", "q");
+    qArea.rows = 3;
+    qArea.placeholder = T("help.placeholder");
+    qWrap.appendChild(qArea);
+    box.appendChild(qWrap);
+    var askBtn = document.createElement("button");
+    askBtn.type = "button";
+    askBtn.className = "btn btn-small";
+    askBtn.textContent = T("help.submit");
+    box.appendChild(askBtn);
+    var statusP = document.createElement("p");
+    statusP.className = "hint";
+    box.appendChild(statusP);
+    var respDiv = document.createElement("div");
+    respDiv.hidden = true;
+    var respLabel = document.createElement("p");
+    var respSpan = document.createElement("span");
+    respSpan.className = "zone-label";
+    respSpan.textContent = T("help.response.label");
+    respLabel.appendChild(respSpan);
+    respDiv.appendChild(respLabel);
+    var ansP = document.createElement("p");
+    respDiv.appendChild(ansP);
+    var confP = document.createElement("p");
+    confP.className = "hint";
+    respDiv.appendChild(confP);
+    box.appendChild(respDiv);
+    askBtn.addEventListener("click", function () {
+      var q = qArea.value.trim();
+      if (!q) return;
+      var cat = catSel.value;
+      askBtn.disabled = true;
+      statusP.textContent = "";
+      PodiumAI.askWonderHelp(q).then(function (ans) {
+        askBtn.disabled = false;
+        if (!ans) { statusP.textContent = T("help.unavailable"); return; }
+        ansP.textContent = ans;
+        respDiv.hidden = false;
+        var tracked = (cat !== "howto");
+        confP.textContent = tracked ? T("help.tracked") : T("help.answered");
+        try {
+          audit("help", "", JSON.stringify({ category: cat, question: q, answer: ans }));
+          if (tracked) PodiumStore.recordSysIssue(state, cat, q, ans, etNow());
+          PodiumStore.save(state);
+        } catch (e) { /* session-only fallback */ }
+      });
+    });
+  }
   function renderCommittee() {
     setAttr("view-committee", "aria-label", T("committee.aria"));
     setText("committeeHeading", T("tab.committee"));
@@ -3535,6 +3647,14 @@
     setText("committeeRulesStructureB", T("committee.rules.structure.body"));
     setText("committeeRulesScheduleH", T("committee.rules.schedule.heading"));
     setText("committeeRulesScheduleB", T("committee.rules.schedule.body"));
+    /* Committee help box (TY, Nov 4): Wonder-powered operational help, visible
+       only to a serving committee member. Hidden (and emptied) for everyone
+       else — no public trace of the box. */
+    var helpBoxCard = $("helpCard");
+    if (helpBoxCard) {
+      if (!servingApprover().member) { helpBoxCard.hidden = true; helpBoxCard.innerHTML = ""; }
+      else { helpBoxCard.hidden = false; renderHelpBox(helpBoxCard); }
+    }
     var list = $("committeeList");
     if (!list) return;
     var members = (PodiumStore.loadCommittee().members || []).slice()
