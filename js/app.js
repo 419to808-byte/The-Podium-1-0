@@ -1027,6 +1027,7 @@
   function audit(ev, ref, detail) {
     try { PodiumStore.auditAppend(state, ev, ref || "", detail || "", etNow()); } catch (e) { /* log-only */ }
   }
+  function adviceOutcomeLabel(o) { var k = "advice.outcome." + (o || ""); try { var s = T(k); return (s === k || !s) ? String(o || "") : s; } catch (e) { return String(o || ""); } }
   function auditEvLabel(ev) {
     var k = "audit.ev." + ev, s = T(k);
     return (s === k || !s) ? ev : s;
@@ -2069,6 +2070,7 @@
   var wonderDrafts = {};   /* postId -> draft text */
   var wonderApproved = {}; /* postId -> true once approved in this session */
   var wonderCitations = {}; /* postId -> [{commitment, source, date}] editor state, recorded onto the item at approval */
+  var wonderLiaisonAdvice = {}; /* postId -> [{liaison, claim, authority, date, outcome}] recorded in the draft zone, logged on approval, session-only */
   var wonderNoCommit = {}; /* postId -> true when the approver marked "no commitments" */
   var wonderEdited = {};   /* postId -> true once the committee edited the draft */
   /* Draft-zone visibility: in the real product drafts and editing are committee-only; this starter shows the zone publicly. */
@@ -2151,6 +2153,9 @@
         if (!rc.ok) { trackerMsg(box, "cite.required"); return; }
         try { PodiumStore.save(state); } catch (e) { /* session-only fallback */ }
         audit("approve", p.ref + "-A", "");
+        (wonderLiaisonAdvice[p.id] || []).forEach(function (a) {
+          audit("liaisonAdvice", p.ref, JSON.stringify({ liaison: a.liaison, claim: a.claim, authority: a.authority, date: a.date, outcome: a.outcome }));
+        });
         wonderApproved[p.id] = true;
         delete wonderCitations[p.id];
         delete wonderNoCommit[p.id];
@@ -2161,11 +2166,12 @@
         var list = wonderCitations[p.id] || [];
         var h = '<p><span class="zone-label">' + esc(T("cite.legend")) + "</span></p>";
         for (var i = 0; i < list.length; i++) {
-          h += '<p class="hint">' + esc(T("cite.commitment")) + ": " + esc(list[i].commitment) + " \u2014 " + esc(T("cite.source")) + ": " + esc(list[i].source) + ", " + esc(list[i].date) + ' <button type="button" class="btn btn-small" data-cite-rm="' + i + '">' + esc(T("cite.remove")) + "</button></p>";
+          h += '<p class="hint">' + esc(T("cite.commitment")) + ": " + esc(list[i].commitment) + " \u2014 " + esc(T("cite.source")) + ": " + esc(list[i].source) + ", " + esc(list[i].date) + (list[i].liaison ? " \u2014 " + esc(T("cite.via")) + " " + esc(list[i].liaison) : "") + ' <button type="button" class="btn btn-small" data-cite-rm="' + i + '">' + esc(T("cite.remove")) + "</button></p>";
         }
         h += '<div class="field"><label>' + esc(T("cite.commitment")) + '</label><textarea data-cite="commitment" rows="2" placeholder="' + esc(T("cite.commitment.ph")) + '"></textarea></div>' +
           '<div class="field"><label>' + esc(T("cite.source")) + '</label><textarea data-cite="source" rows="2" placeholder="' + esc(T("cite.source.ph")) + '"></textarea></div>' +
           '<div class="field"><label>' + esc(T("cite.date")) + '</label><input type="text" data-cite="date" placeholder="' + esc(T("cite.date.ph")) + '"></div>' +
+          '<div class="field"><label>' + esc(T("cite.liaison")) + '</label><input type="text" data-cite="liaison" placeholder="' + esc(T("cite.liaison.ph")) + '"></div>' +
           '<div class="btn-row"><button type="button" class="btn btn-small" data-cite-add>' + esc(T("cite.add")) + "</button></div>" +
           '<div class="field"><label><input type="checkbox" data-cite-none> ' + esc(T("cite.nocommit")) + "</label></div>";
         citeSection.innerHTML = h;
@@ -2174,7 +2180,7 @@
         if (addBtn) addBtn.addEventListener("click", function () {
           if (!citeVal("commitment").trim() || !citeVal("source").trim() || !citeVal("date").trim()) { trackerMsg(box, "form.required"); return; }
           var l = wonderCitations[p.id] || (wonderCitations[p.id] = []);
-          l.push({ commitment: citeVal("commitment"), source: citeVal("source"), date: citeVal("date") });
+          l.push({ commitment: citeVal("commitment"), source: citeVal("source"), date: citeVal("date"), liaison: citeVal("liaison") });
           delete wonderNoCommit[p.id];
           trackerMsg(box, null);
           renderCites();
@@ -2198,6 +2204,51 @@
       }
       renderCites();
       box.appendChild(citeSection);
+      /* Liaison-advice record (TY, Nov 4): each piece of liaison advice that
+         shapes the answer is recorded here with the authority cited and what
+         the committee did with it. Session-only until approval, when the
+         entries are written to the audit log. */
+      var adviceSection = document.createElement("div");
+      var ADVICE_OUTCOMES = ["followed", "second", "notfollowed"];
+      function adviceVal(n) { var el = adviceSection.querySelector('[data-advice="' + n + '"]'); return el ? el.value : ""; }
+      function renderAdvice() {
+        var wasOpen = !!(adviceSection.querySelector("details") && adviceSection.querySelector("details").open);
+        var list = wonderLiaisonAdvice[p.id] || [];
+        var h = '<details><summary><span class="zone-label">' + esc(T("advice.legend")) + "</span></summary>";
+        for (var j = 0; j < list.length; j++) {
+          h += '<p class="hint">' + esc(list[j].liaison) + " \u2014 " + esc(list[j].claim) + " (" + esc(adviceOutcomeLabel(list[j].outcome)) + ")" +
+            ' <button type="button" class="btn btn-small" data-advice-rm="' + j + '">' + esc(T("cite.remove")) + "</button></p>";
+        }
+        h += '<div class="field"><label>' + esc(T("advice.liaison")) + '</label><input type="text" data-advice="liaison" placeholder="' + esc(T("advice.liaison.ph")) + '"></div>' +
+          '<div class="field"><label>' + esc(T("advice.claim")) + '</label><textarea data-advice="claim" rows="2" placeholder="' + esc(T("advice.claim.ph")) + '"></textarea></div>' +
+          '<div class="field"><label>' + esc(T("advice.authority")) + '</label><textarea data-advice="authority" rows="2" placeholder="' + esc(T("advice.authority.ph")) + '"></textarea></div>' +
+          '<div class="field"><label>' + esc(T("advice.date")) + '</label><input type="text" data-advice="date" placeholder="' + esc(T("advice.date.ph")) + '"></div>' +
+          '<div class="field"><label>' + esc(T("advice.outcome")) + '</label><select data-advice="outcome">' +
+          '<option value="followed">' + esc(T("advice.outcome.followed")) + "</option>" +
+          '<option value="second">' + esc(T("advice.outcome.second")) + "</option>" +
+          '<option value="notfollowed">' + esc(T("advice.outcome.notfollowed")) + "</option></select></div>" +
+          '<div class="btn-row"><button type="button" class="btn btn-small" data-advice-add>' + esc(T("advice.add")) + "</button></div>" + "</details>";
+        adviceSection.innerHTML = h;
+        if (wasOpen) { var det = adviceSection.querySelector("details"); if (det) det.open = true; }
+        var addBtn = adviceSection.querySelector("[data-advice-add]");
+        if (addBtn) addBtn.addEventListener("click", function () {
+          if (!adviceVal("liaison").trim() || !adviceVal("claim").trim() || !adviceVal("authority").trim() || !adviceVal("date").trim()) { trackerMsg(box, "form.required"); return; }
+          if (ADVICE_OUTCOMES.indexOf(adviceVal("outcome")) < 0) { trackerMsg(box, "form.required"); return; }
+          var l = wonderLiaisonAdvice[p.id] || (wonderLiaisonAdvice[p.id] = []);
+          l.push({ liaison: adviceVal("liaison"), claim: adviceVal("claim"), authority: adviceVal("authority"), date: adviceVal("date"), outcome: adviceVal("outcome") });
+          trackerMsg(box, null);
+          renderAdvice();
+        });
+        Array.prototype.forEach.call(adviceSection.querySelectorAll("[data-advice-rm]"), function (btn) {
+          btn.addEventListener("click", function () {
+            var l = wonderLiaisonAdvice[p.id] || [];
+            l.splice(Number(btn.getAttribute("data-advice-rm")), 1);
+            renderAdvice();
+          });
+        });
+      }
+      renderAdvice();
+      box.appendChild(adviceSection);
       box.appendChild(editBtn);
       box.appendChild(document.createTextNode(" "));
       box.appendChild(approveBtn);
@@ -2216,6 +2267,7 @@
         audit("draft", p.ref + "-A", "");
         delete wonderApproved[p.id];
         delete wonderEdited[p.id];
+        delete wonderLiaisonAdvice[p.id];
         delete wonderCitations[p.id];
         delete wonderNoCommit[p.id];
         wonderStatus.textContent = "";
@@ -2663,7 +2715,13 @@
     (state.audit || []).slice().reverse().forEach(function (e) {
       html += "<li><strong>" + esc(e.t) + "</strong> \u00b7 " + esc(auditEvLabel(e.ev)) +
         (e.ref ? ' \u00b7 <span class="ref-code">' + esc(e.ref) + "</span>" : "") +
-        ' \u00b7 <span class="ref-code">' + esc(String(e.h || "").slice(0, 12)) + "</span></li>";
+        ' \u00b7 <span class="ref-code">' + esc(String(e.h || "").slice(0, 12)) + "</span>";
+      if (e.ev === "liaisonAdvice") {
+        var adv = null;
+        try { adv = JSON.parse(e.d || ""); } catch (err) { adv = null; }
+        if (adv) html += ' <span class="hint">' + esc(adv.liaison || "") + " \u2014 " + esc(adv.claim || "") + " (" + esc(adviceOutcomeLabel(adv.outcome)) + ")</span>";
+      }
+      html += "</li>";
     });
     html += "</ul>";
     card.innerHTML = html;
@@ -3430,7 +3488,7 @@
   function citationsHtml(b, p) {
     var c = citationsFor(b, p), out = "";
     for (var i = 0; i < c.length; i++) {
-      out += '<p class="hint">' + esc(T("cite.commitment")) + ": " + esc(c[i].commitment) + " \u2014 " + esc(T("cite.source")) + ": " + esc(c[i].source) + ", " + esc(c[i].date) + ".</p>";
+      out += '<p class="hint">' + esc(T("cite.commitment")) + ": " + esc(c[i].commitment) + " \u2014 " + esc(T("cite.source")) + ": " + esc(c[i].source) + ", " + esc(c[i].date) + "." + (c[i].liaison ? " \u2014 " + esc(T("cite.via")) + " " + esc(c[i].liaison) : "") + "</p>";
     }
     return out;
   }

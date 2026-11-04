@@ -661,7 +661,7 @@ var PodiumStore = (function () {
         if (!list[i] || !String(list[i].commitment || "").trim() || !String(list[i].source || "").trim() || !String(list[i].date || "").trim()) return { ok: false, reason: "need-citations" };
       }
     }
-    item.citations = (list || []).map(function (c) { return { commitment: String(c.commitment), source: String(c.source), date: String(c.date) }; });
+    item.citations = (list || []).map(function (c) { var o = { commitment: String(c.commitment), source: String(c.source), date: String(c.date) }; if (c.liaison !== undefined && c.liaison !== null && String(c.liaison).trim() !== "") o.liaison = String(c.liaison); return o; });
     item.noCommitments = !!noCommit;
     return { ok: true, citations: item.citations };
   }
