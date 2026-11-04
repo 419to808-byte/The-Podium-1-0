@@ -661,7 +661,8 @@ var PodiumAI = (function () {
     "Do NOT invent commitments beyond a plausible committee action (process steps only — transmit, report status — never promise enactment or outcomes). " +
     "Write ONLY the proposed answer itself. Do not include any sentence about the draft, its status, or whether it is final — no 'this draft...', 'this is a draft...', 'does not represent a final...' meta language of any kind. The interface labels the text as a draft pending committee review; the answer body must read as the proposed answer, nothing meta. " +
     "Never alter, reword, or comment on the post itself. Reply with ONLY the draft answer text, no prefix, no label, no quotation marks around the whole answer. " +
-    "Add a 'Citations:' section listing one line per commitment in the exact form '- COMMITMENT | SOURCE | DATE' (commitment quote, agency or authority, date), or - if the answer makes no commitments - a line reading exactly 'No commitments in this answer.'.";
+    "Add a 'Citations:' section listing one line per commitment in the exact form '- COMMITMENT | SOURCE | DATE' (commitment quote, agency or authority, date), or - if the answer makes no commitments - a line reading exactly 'No commitments in this answer.'. " +
+    "End with an 'Agency request:' line in the exact form 'Agency request: AGENCY | ASK' naming the agency the answer asks something of and the specific ask, so the committee can copy it and send it as-is.";
   function wonderChat(systemText, userText) {
     var t = WONDER_TRANSPORT;
     var key = getKey();
@@ -686,22 +687,31 @@ var PodiumAI = (function () {
   }
   /* Draft a committee answer for a selected post. Input is the post object
      (verbatim body, topic, ref, frozen authorState). Resolves the draft
-     envelope { text, citations, noCommitments } (no "Sample committee response:" prefix — the UI labels it
+     envelope { text, citations, noCommitments, agencyRequest } (no "Sample committee response:" prefix — the UI labels it
      as a draft), or null when Wonder is unavailable. */
   /* Draft envelope: a draft arrives complete — the answer text plus its
      citations, so the committee votes on it as written and never attaches
      citations itself. parseDraftEnvelope splits the model reply into
-     { text, citations, noCommitments }. Malformed citation lines are dropped;
-     a draft with neither valid citations nor the declaration cannot be
-     approved. */
+     { text, citations, noCommitments, agencyRequest }. Malformed citation
+     lines are dropped; a draft with neither valid citations nor the
+     declaration cannot be approved. The agency request arrives as a trailing
+     'Agency request: AGENCY | ASK' line (malformed lines dropped); the
+     committee copies it as-is and never edits it. */
   var NO_COMMIT_LINE = "No commitments in this answer.";
   function parseDraftEnvelope(text) {
     var lines = String(text == null ? "" : text).replace(/\s+$/, "").split("\n");
-    var cites = [], noCommit = false, end = lines.length, i, t, dropped = {};
+    var cites = [], noCommit = false, agencyReq = null, end = lines.length, i, t, dropped = {};
     for (i = end - 1; i >= 0; i--) {
       t = lines[i].trim();
       if (!t) { end = i; continue; }
       if (t.toLowerCase() === NO_COMMIT_LINE.toLowerCase()) { noCommit = true; end = i; continue; }
+      if (t.toLowerCase().indexOf("agency request:") === 0) {
+        var aparts = t.slice("Agency request:".length).split("|");
+        var ag = aparts[0].trim(), ak = aparts.slice(1).join("|").trim();
+        if (ag && ak) { agencyReq = { agency: ag, ask: ak }; end = i; continue; }
+        dropped[i] = true;
+        continue;
+      }
       if (t.charAt(0) === "-") {
         var parts = t.slice(1).split("|");
         if (parts.length >= 3) {
@@ -716,7 +726,7 @@ var PodiumAI = (function () {
     }
     if (cites.length) noCommit = false;
     var kept = lines.filter(function (ln, j) { return j < end && !dropped[j]; });
-    return { text: kept.join("\n").replace(/\s+$/, ""), citations: cites, noCommitments: cites.length ? false : noCommit };
+    return { text: kept.join("\n").replace(/\s+$/, ""), citations: cites, noCommitments: cites.length ? false : noCommit, agencyRequest: agencyReq };
   }
   function draftCommitteeAnswer(post) {
     if (!post || !getKey()) return Promise.resolve(null);

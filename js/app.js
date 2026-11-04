@@ -394,6 +394,10 @@
     "wonder.unavailable": "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.",
     "wonder.approved": "Approved by committee",
     "wonder.nocites": "This draft carries no citations and no \u201cNo commitments in this answer\u201d declaration, so it cannot be approved.",
+    "wonder.request.label": "Agency request (send Saturday)",
+    "wonder.request.copy": "Copy request",
+    "wonder.request.copied": "Request copied ✓",
+    "wonder.request.body": "To {agency}: {ask} (Re: post {ref}).",
     "cite.legend": "Citations",
     "cite.commitment": "Commitment",
     "cite.source": "Source",
@@ -2068,7 +2072,7 @@
      then does the DISPLAYED text change (approved pill). The zone lives
      under Next Week posts: the committee drafts during committee week,
      before the briefing airs. */
-  var wonderDrafts = {};   /* postId -> draft text */
+  var wonderDrafts = {};   /* postId -> draft envelope { text, citations, noCommitments, agencyRequest } */
   var wonderApproved = {}; /* postId -> true once approved in this session */
   var wonderDeclined = {}; /* postId -> true once declined in this session (post reverts to shine light) */
   var wonderLiaisonAdvice = {}; /* postId -> [{liaison, claim, authority, date, outcome}] recorded in the draft zone, logged on approval, session-only */
@@ -2099,11 +2103,21 @@
     function showDraft() {
       var draft = wonderDrafts[p.id];
       if (!draft || wonderApproved[p.id] || wonderDeclined[p.id]) return;
+      var reqCopyText = requestText(draft);
+      /* Agency request (TY, Nov 4): Wonder supplies a ready-to-send request to
+         the agency the answer asks something of, as part of the draft envelope.
+         Read-only here — copied with the existing copy helper, never edited. */
+      function requestText(d) {
+        if (!d || !d.agencyRequest || !d.agencyRequest.agency || !d.agencyRequest.ask) return "";
+        return Tf("wonder.request.body", { agency: d.agencyRequest.agency, ask: d.agencyRequest.ask, ref: p.ref });
+      }
       var box = document.createElement("div");
       box.innerHTML = '<span class="zone-label">' + esc(draftLabel()) + "</span>" +
         "<p>" + esc(draft.text) + "</p>" +
         citationsHtml({ citations: draft.citations || [] }, p) +
-        (draft.noCommitments ? '<p class="hint">' + esc(T("cite.nocommit")) + "</p>" : "");
+        (draft.noCommitments ? '<p class="hint">' + esc(T("cite.nocommit")) + "</p>" : "") +
+        (reqCopyText ? '<p><span class="zone-label">' + esc(T("wonder.request.label")) + "</span></p>" +
+          '<p data-wonder-request>' + esc(reqCopyText) + "</p>" : "");
       var approveBtn = document.createElement("button");
       approveBtn.type = "button";
       approveBtn.className = "btn btn-small";
@@ -2187,6 +2201,22 @@
       box.appendChild(approveBtn);
       box.appendChild(document.createTextNode(" "));
       box.appendChild(declineBtn);
+      /* Agency-request copy control: copies the exact request text with the
+         existing copy helper (same copied/failed pattern as share links). */
+      if (reqCopyText) {
+        var reqCopyBtn = document.createElement("button");
+        reqCopyBtn.type = "button";
+        reqCopyBtn.className = "btn btn-small";
+        reqCopyBtn.textContent = T("wonder.request.copy");
+        reqCopyBtn.addEventListener("click", function () {
+          copyText(reqCopyText, function (ok) {
+            reqCopyBtn.textContent = ok ? T("wonder.request.copied") : T("share.failed");
+            setTimeout(function () { reqCopyBtn.textContent = T("wonder.request.copy"); }, 2000);
+          });
+        });
+        box.appendChild(document.createTextNode(" "));
+        box.appendChild(reqCopyBtn);
+      }
       if (!draftGate(draft)) {
         approveBtn.disabled = true;
         var gateHint = document.createElement("p");
