@@ -73,9 +73,9 @@
         <li>The Live Feed shows the current cycle only. Past-cycle posts that were never selected are deleted; selected posts are kept as the briefing record.</li>
         <li>Posting and voting run Monday 12:00 AM to Sunday 11:59 PM ET. The pool freezes at the Sunday cutoff, the draw is Monday at 12:00 PM ET, the committee has the week plus a Monday-Tuesday buffer, and the briefing airs Wednesdays at 1:00 PM ET as the fixed opening segment.</li>
         <li>This Week shows only the most recently aired briefing. Next Week shows the next briefing's selections. A briefing's replay publishes when that briefing airs. Prior Posts &amp; Answers and Status Updates list aired selections only.</li>
-        <li>Sign-in here is a placeholder: this starter runs as a single local profile with no identity verification. Real identity verification is required before production use.</li>
+        <li>Sign-in here is a placeholder: this site runs as a single local profile with no identity verification. Real identity verification is required before production use.</li>
         <li>Language: a citizen may post in any language. The original post is the official record and is read aloud verbatim in the author's language. Translations are machine aids for readers and never replace the original.</li>
-        <li>Live activity: when 'Simulate live activity' is enabled, the feed shows AI-generated demonstration posts, clearly labeled. They are never voted on, never drawn, and never briefed.</li>
+        <li>Live activity: when 'Simulate live activity' is enabled, the feed shows AI-generated sample posts, clearly labeled. They are never voted on, never drawn, and never briefed.</li>
     <li>Mock accounts: signing up stores a local profile in this browser only, with no real identity verification.</li>
     <li>Real sign-in/sign-up: shown as a preview; the backend and text verification are not yet built.</li>
     <li id="fineLi21">Security: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log.</li>
@@ -223,7 +223,7 @@
       <p id="committeeRulesStartupP6">A short starting term still counts as a term for the sit-out rule: after cycling out, a member sits out twelve weeks before being eligible again.</p>
     </details>
     <label class="filter-label" id="faceSwitchWrap"><span id="faceSwitchLabel">View as</span>
-      <select id="faceSel" aria-labelledby="faceSwitchLabel"><option value="civilian" id="faceOptCivilian">Civilian (public view)</option><option value="committee" id="faceOptCommittee">Committee demo character</option></select></label>
+      <select id="faceSel" aria-labelledby="faceSwitchLabel"><option value="civilian" id="faceOptCivilian">Civilian (public view)</option><option value="committee" id="faceOptCommittee">Committee member</option></select></label>
     <article class="card" id="termCard" hidden></article>
     <p class="hint" id="committeeEmpty" hidden>No committee members yet. The first members will be drawn by random draw once verified citizens agree to serve.</p>
     <ul id="committeeList" class="post-list"></ul>
@@ -269,11 +269,11 @@
     </div>
     <div class="footer-col">
       <h2 id="footerSecurity">Security</h2>
-      <p id="footerSecurityNote">Demo: every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log. The real product is planned to verify identity through Login.gov and use phishing-resistant sign-in, designed to meet federal security standards. The backend items are not yet built.</p>
+      <p id="footerSecurityNote">Every post carries a SHA-256 hash, and every action is recorded in a hash-chained audit log. The real product is planned to verify identity through Login.gov and use phishing-resistant sign-in, designed to meet federal security standards. The backend items are not yet built.</p>
     </div>
     <div class="footer-col">
       <h2 id="footerNotices">Notices</h2>
-      <p id="footerStarterNotice"><strong>Starter notice:</strong> sign-in is a placeholder; no real personal data is collected, requested, or stored. AI checks run locally until a Model API key is provided for the session. This starter ships with no users, posts, answers, or updates.</p>
+      <p id="footerStarterNotice"><strong>Notice:</strong> sign-in is a placeholder; no real personal data is collected, requested, or stored. AI checks run locally until a Model API key is provided for the session. This site ships with no users, posts, answers, or updates.</p>
     </div>
   </div>
   <div class="wrap key-row">
@@ -307,4 +307,5 @@
 <script src="js/app.js"></script>
 </body>
 </html>
+
 
