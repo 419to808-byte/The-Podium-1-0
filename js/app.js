@@ -411,6 +411,10 @@
     "wonder.approve": "Approve draft",
     "wonder.decline": "Decline draft",
     "wonder.declined.note": "Declined by the committee. This post reverts to shine light: it will still be read aloud at the briefing and tracked, never buried.",
+    "wonder.decline.reason": "Why the committee is declining (required)",
+    "wonder.decline.reason.ph": "State the reason - it will be shown on the tracker.",
+    "wonder.declined.reason": "Decline reason",
+    "wonder.declined.bycommittee": "Declined by the committee.",
     "wonder.drafting": "Drafting with Muse Wonder ({model})...",
     "wonder.unavailable": "Muse Wonder is unavailable (no session key, or the call failed) \u2014 no draft available. Answers are never drafted by Spark.",
     "wonder.approved": "Approved by committee",
@@ -473,15 +477,6 @@
     "noaction.vote": "Decided by committee vote",
     "noaction.authority.required": "A cited authority is required — name the regulation, statute, budget line, or jurisdiction.",
     "form.required": "This field is required.",
-    "appeal.button": "I don't think this is right — appeal.",
-    "appeal.by": "Appeal by {name} on {date}",
-    "appeal.awaiting": "Awaiting committee re-review",
-    "rereview.legend": "Committee re-review",
-    "rereview.uphold": "Uphold appeal — back under review",
-    "rereview.reject": "Reject appeal — determination stands",
-    "rereview.outcome.upheld": "Appeal upheld — back under review",
-    "rereview.outcome.rejected": "Appeal rejected — determination stands",
-    "rereview.note.ph": "Re-review note (optional)",
     "challenge.legend": "Why can't we do this? — committee challenges",
     "challenge.name": "Why can't we do this?",
     "challenge.raise": "Raise challenge",
@@ -2290,7 +2285,11 @@
         declineBtn.disabled = true;
       }
       declineBtn.addEventListener("click", function () {
-        PodiumStore.recordDecline(state, p.id);
+        var reasonEl = box.querySelector("[data-decline-reason]");
+        var reason = reasonEl ? reasonEl.value : "";
+        if (!reason.trim()) { trackerMsg(box, "form.required"); return; }
+        trackerMsg(box, null);
+        PodiumStore.recordDecline(state, p.id, reason);
         try { PodiumStore.save(state); } catch (e) { /* session-only fallback */ }
         wonderDeclined[p.id] = true;
         audit("decline", p.ref + "-A", "");
@@ -2341,6 +2340,11 @@
       }
       renderAdvice();
       box.appendChild(adviceSection);
+      var declineField = document.createElement("div");
+      declineField.className = "field";
+      declineField.innerHTML = "<label>" + esc(T("wonder.decline.reason")) + "</label>" +
+        '<textarea data-decline-reason rows="2" placeholder="' + esc(T("wonder.decline.reason.ph")) + '"></textarea>';
+      box.appendChild(declineField);
       box.appendChild(approveBtn);
       box.appendChild(document.createTextNode(" "));
       box.appendChild(declineBtn);
@@ -2605,25 +2609,6 @@
       "<p><strong>" + esc(T("noaction.redirect")) + ":</strong> " + esc(b.redirectTo || "") + "</p>" +
       (b.committeeVote ? '<p class="hint">' + esc(T("noaction.vote")) + "</p>" : "") + "</div>";
   }
-  function appealsHtml(b, p) {
-    var ap = (b && b.appeals) || [], out = "", i;
-    for (i = 0; i < ap.length; i++) {
-      var a = ap[i];
-      out += '<div class="zone zone-answer"><span class="zone-label">' + esc(Tf("appeal.by", { name: a.name, date: a.date })) + "</span>";
-      out += a.outcome
-        ? "<p>" + esc(a.outcome.decision === "upheld" ? T("rereview.outcome.upheld") : T("rereview.outcome.rejected")) + (a.outcome.note ? " \u2014 " + esc(a.outcome.note) : "") + (a.outcome.date ? " (" + esc(a.outcome.date) + ")" : "") + "</p>"
-        : '<p class="hint">' + esc(T("appeal.awaiting")) + "</p>" +
-          '<div class="field"><label>' + esc(T("rereview.legend")) + "</label>" +
-          '<textarea data-rr-note rows="2" placeholder="' + esc(T("rereview.note.ph")) + '"></textarea></div>' +
-          '<div class="btn-row"><button type="button" class="btn btn-small" data-act="rereview-uphold">' + esc(T("rereview.uphold")) + "</button>" +
-          '<button type="button" class="btn btn-small" data-act="rereview-reject">' + esc(T("rereview.reject")) + "</button></div>";
-      out += "</div>";
-    }
-    if (b && b.trackerStatus === "No Action" && isAuthor(p) && !PodiumStore.appealFor(b, b.determinationId || 0)) {
-      out += '<div class="btn-row"><button type="button" class="btn btn-small" data-act="appeal">' + esc(T("appeal.button")) + "</button></div>";
-    }
-    return out;
-  }
   function responsesHtml(b, p, kind, id) {
     var rs = ((b && b.responses) || []).filter(function (r) { return r && r.kind === kind && String(r.id) === String(id); });
     var out = "";
@@ -2675,9 +2660,14 @@
       '<div class="btn-row"><button type="button" class="btn btn-small" data-act="challenge-raise">' + esc(T("challenge.raise")) + "</button></div>";
     return out;
   }
+  function declinedHtml(b) {
+    if (!b || !b.declined || !b.declineReason) return "";
+    return '<div class="zone zone-answer"><span class="zone-label">' + esc(T("wonder.declined.bycommittee")) + "</span>" +
+      "<p><strong>" + esc(T("wonder.declined.reason")) + ":</strong> " + esc(b.declineReason) + "</p></div>";
+  }
   function trackerHtml(b, p) {
     if (!b || !p) return "";
-    return noActionHtml(b) + appealsHtml(b, p) + challengesHtml(b, p) +
+    return noActionHtml(b) + declinedHtml(b, p) + challengesHtml(b, p) +
       responsesHtml(b, p, "record", "record");
   }
   function trackerMsg(root, key) {
@@ -2702,21 +2692,6 @@
       trackerMsg(root, null);
       rerun();
     }
-    var ap = root.querySelector('[data-act="appeal"]');
-    if (ap) ap.addEventListener("click", function () {
-      var me = PodiumStore.citizenById(state, state.currentUserId);
-      var r = PodiumStore.fileAppeal(b, { by: state.currentUserId, name: me ? me.name : "", date: todayShort() });
-      if (!r.ok) { fail("form.required"); return; }
-      ok(rerender);
-    });
-    Array.prototype.forEach.call(root.querySelectorAll('[data-act="rereview-uphold"], [data-act="rereview-reject"]'), function (btn) {
-      btn.addEventListener("click", function () {
-        var note = trackerVal(root, "[data-rr-note]");
-        var r = PodiumStore.reviewAppeal(b, { decision: btn.getAttribute("data-act") === "rereview-uphold" ? "upheld" : "reinstated", note: note, date: todayShort() });
-        if (!r.ok) { fail("form.required"); return; }
-        ok(rerender);
-      });
-    });
     var raise = root.querySelector('[data-act="challenge-raise"]');
     if (raise) raise.addEventListener("click", function () {
       var me = PodiumStore.citizenById(state, state.currentUserId);

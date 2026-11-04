@@ -1,4 +1,4 @@
-/* The Podium — store. localStorage persistence; re-seeds deterministically.
+﻿/* The Podium — store. localStorage persistence; re-seeds deterministically.
    Collections: citizens, cycles, posts, votes ("voterId:postId"), briefingItems. */
 var PodiumStore = (function () {
   "use strict";
@@ -681,14 +681,17 @@ var PodiumStore = (function () {
     if (typeof agencyReq === "string" && agencyReq.trim()) item.agencyRequest = agencyReq;
     return { ok: true };
   }
-  /* Decline record (TY, Nov 4): stamp a decline marker onto the briefing item
-     at decline, so a decided post stays decided across reload (a declined
-     draft is never re-drafted; the post reverts to shine light). */
-  function recordDecline(state, postId) {
+  /* Decline record (TY, Nov 4): stamp a decline marker plus the committee's
+     required reason onto the briefing item at decline, so a decided post
+     stays decided across reload (a declined draft is never re-drafted; the
+     post reverts to shine light, reason shown on the tracker). */
+  function recordDecline(state, postId, reason) {
     var items = (state && state.briefingItems) || [], item = null, i;
     for (i = 0; i < items.length; i++) { if (items[i] && items[i].postId === postId) { item = items[i]; break; } }
     if (!item) return { ok: false, reason: "no-item" };
+    if (!String(reason || "").trim()) return { ok: false, reason: "need-reason" };
     item.declined = true;
+    item.declineReason = String(reason).trim();
     return { ok: true };
   }
   /* System issue record (TY, Nov 4): a tracked-category help request and
@@ -988,8 +991,7 @@ var PodiumStore = (function () {
      save. No post or answer text is ever modified here. Every mutator returns
      {ok:true,...} or {ok:false,reason:...} and leaves the item untouched on
      failure. A determination is identified by determinationId, bumped each
-     time a "We can't do this" verdict is newly recorded, so one appeal per
-     determination is enforceable. */
+     time a "We can't do this" verdict is newly recorded. */
   function setNoAction(item, f) {
     f = f || {};
     if (!item) return { ok: false, reason: "no-item" };
@@ -1004,47 +1006,6 @@ var PodiumStore = (function () {
     item.committeeVote = true;
     item.determinationId = (item.determinationId || 0) + 1;
     return { ok: true, determinationId: item.determinationId };
-  }
-  function openAppeal(item) {
-    if (!item) return null;
-    var det = item.determinationId || 0;
-    var ap = item.appeals || [];
-    for (var i = 0; i < ap.length; i++) {
-      if (ap[i] && ap[i].determinationId === det && !ap[i].outcome) return ap[i];
-    }
-    return null;
-  }
-  function appealFor(item, det) {
-    var ap = (item && item.appeals) || [];
-    for (var i = 0; i < ap.length; i++) {
-      if (ap[i] && ap[i].determinationId === det) return ap[i];
-    }
-    return null;
-  }
-  function fileAppeal(item, f) {
-    if (!item) return { ok: false, reason: "no-item" };
-    if (item.trackerStatus !== "No Action") return { ok: false, reason: "not-noaction" };
-    if (!f || !f.by) return { ok: false, reason: "need-citizen" };
-    var det = item.determinationId || 0;
-    var ap = item.appeals || (item.appeals = []);
-    if (appealFor(item, det)) return { ok: false, reason: "already-appealed" };
-    var a = { determinationId: det, by: f.by, name: f.name || "", date: f.date || "", text: String(f.text || ""), outcome: null };
-    ap.push(a);
-    item.trackerStatus = "In Progress";
-    return { ok: true, appeal: a };
-  }
-  function reviewAppeal(item, outcome) {
-    if (!item) return { ok: false, reason: "no-item" };
-    var a = openAppeal(item);
-    if (!a) return { ok: false, reason: "no-open-appeal" };
-    var d = (outcome && outcome.decision) || "";
-    if (d !== "upheld" && d !== "reinstated") return { ok: false, reason: "need-decision" };
-    a.outcome = { decision: d, note: String((outcome && outcome.note) || ""), date: (outcome && outcome.date) || "" };
-    if (d === "reinstated") {
-      item.trackerStatus = "No Action";
-      item.determinationId = (item.determinationId || 0) + 1;
-    }
-    return { ok: true, appeal: a };
   }
   function raiseChallenge(item, f) {
     if (!item) return { ok: false, reason: "no-item" };
@@ -1124,10 +1085,6 @@ var PodiumStore = (function () {
     hashPost: hashPost,
     auditAppend: auditAppend,
     setNoAction: setNoAction,
-    openAppeal: openAppeal,
-    appealFor: appealFor,
-    fileAppeal: fileAppeal,
-    reviewAppeal: reviewAppeal,
     raiseChallenge: raiseChallenge,
     answerChallenge: answerChallenge,
     addResponse: addResponse,
