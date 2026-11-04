@@ -1205,7 +1205,7 @@
       '<p><span class="ref-code">' + esc(answerCode(post)) + "</span></p>" +
       "<p>" + esc(displayAnswer(b.answer)) + "</p>";
     list.appendChild(ans);
-    b.updates.forEach(function (u, i) {
+    (b.updates || []).forEach(function (u, i) {
       var hl = highlight === ("U" + (i + 1));
       var li = document.createElement("li");
       li.className = "card zone-answer" + (hl ? " thread-hl" : "");
