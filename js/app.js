@@ -140,6 +140,13 @@
     "committee.rules.structure.body": "Twelve members, each holding an equal share of the decision-making power. Government agency liaisons advise only and do not vote. Each week the committee receives the selected posts and the AI-drafted answers and votes on whether to follow the AI suggestions. A split vote means no action on that post this week and the post reverts to shine light \u2014 it is still read aloud and tracked, never buried. The narrator and the committee spokesperson are permanent salaried roles who present only: the narrator reads posts word-for-word and the spokesperson presents the committee's approved answers. Neither has any authority over posts or answers. If either quits or is fired, the committee hires a replacement \u2014 hired by the committee, fired by the committee by vote, against public criteria.",
     "committee.rules.schedule.heading": "Weekly schedule",
     "committee.rules.schedule.body": "Members receive the selected posts as soon as they are selected and have 3 days on their own to think about them. They all meet in person on Friday to deliberate and vote, and on Saturday to send the agency requests and set tracking in motion. The agency's response arrives Wednesday morning by video call, and the narrator and the committee spokesperson make the script and record live at 1:00 PM ET. Travel and lodging for every member every week are covered at government rates and booked directly.",
+    "committee.rules.startup.heading": "Starting the program: the first committee",
+    "committee.rules.startup.p1": "The program starts with 12 new citizens selected at once, by the same NIST draw and summons as every later selection.",
+    "committee.rules.startup.p2": "To reach the steady rotation \u2014 one member joining and one leaving each Monday \u2014 the first 12 serve staggered starting terms. Each member is assigned an exit week, 1 through 12, by a single NIST random draw at the first meeting. The member assigned week 1 cycles out after one week of service; the member assigned week 2 cycles out after two weeks; and so on until the member assigned week 12, who serves the full twelve weeks.",
+    "committee.rules.startup.p3": "Each Monday, the member cycling out is replaced by a new member drawn the same way, so the committee always has 12 serving members. After the twelfth week, every seat is on a normal 12-week term and the steady rotation is in place.",
+    "committee.rules.startup.p4": "A full 12-week term pays $300 a week \u2014 $3,600. The member who cycles out first serves one week and is paid $300: the biggest financial loss of the starting group, $3,300 less than a full term. Each later exit loses less; the member who serves all twelve weeks loses nothing.",
+    "committee.rules.startup.p5": "This is not a penalty. The staggered exit is what makes the rotation possible: without it, all 12 would leave at once after twelve weeks and the committee would lose all of its experience in a single week. With it, eleven experienced members always remain to carry the work and teach the newcomer. The first members out are the ones who make the program work \u2014 their short first terms are a crucial part of starting it, not a punishment for anything they did.",
+    "committee.rules.startup.p6": "A short starting term still counts as a term for the sit-out rule: after cycling out, a member sits out twelve weeks before being eligible again.",
     "switch.face.label": "View as",
     "switch.face.civilian": "Civilian (public view)",
     "switch.face.committee": "Committee demo character",
@@ -3731,6 +3738,13 @@
     setText("committeeRulesStructureB", T("committee.rules.structure.body"));
     setText("committeeRulesScheduleH", T("committee.rules.schedule.heading"));
     setText("committeeRulesScheduleB", T("committee.rules.schedule.body"));
+    setText("committeeRulesStartupH", T("committee.rules.startup.heading"));
+    setText("committeeRulesStartupP1", T("committee.rules.startup.p1"));
+    setText("committeeRulesStartupP2", T("committee.rules.startup.p2"));
+    setText("committeeRulesStartupP3", T("committee.rules.startup.p3"));
+    setText("committeeRulesStartupP4", T("committee.rules.startup.p4"));
+    setText("committeeRulesStartupP5", T("committee.rules.startup.p5"));
+    setText("committeeRulesStartupP6", T("committee.rules.startup.p6"));
     /* Demo-only face switch (TY, Nov 4): civilian vs committee demo character.
        Always visible — it is how anyone reaches the committee face. */
     setText("faceSwitchLabel", T("switch.face.label"));
