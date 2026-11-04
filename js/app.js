@@ -140,6 +140,14 @@
     "committee.rules.structure.body": "Twelve members, each holding an equal share of the decision-making power. Government agency liaisons advise only and do not vote. Each week the committee receives the selected posts and the AI-drafted answers and votes on whether to follow the AI suggestions. A split vote means no action on that post this week and the post reverts to shine light \u2014 it is still read aloud and tracked, never buried. The narrator and the committee spokesperson are permanent salaried roles who present only: the narrator reads posts word-for-word and the spokesperson presents the committee's approved answers. Neither has any authority over posts or answers. If either quits or is fired, the committee hires a replacement \u2014 hired by the committee, fired by the committee by vote, against public criteria.",
     "committee.rules.schedule.heading": "Weekly schedule",
     "committee.rules.schedule.body": "Members receive the selected posts as soon as they are selected and have 3 days on their own to think about them. They all meet in person on Friday to deliberate and vote, and on Saturday to send the agency requests and set tracking in motion. The agency's response arrives Wednesday morning by video call, and the narrator and the committee spokesperson make the script and record live at 1:00 PM ET. Travel and lodging for every member every week are covered at government rates and booked directly.",
+    "switch.face.label": "View as",
+    "switch.face.civilian": "Civilian (public view)",
+    "switch.face.committee": "Committee demo character",
+    "switch.face.demo": "demo",
+    "term.heading": "Your committee term",
+    "term.week": "Term week {n} of 12",
+    "term.exit": "Exit week {n}",
+    "term.pay": "Pay $300/week \u2014 $3,600 for a full term",
     /* answer approver (answerer of record) */
     "approver.prefix": "Reviewed and approved by",
     "approver.suffix": "civilian committee member, Week {week} of 12",
@@ -412,6 +420,8 @@
     "help.answered": "Answered here \u2014 no further action needed.",
     "help.issues": "System issues",
     "help.unavailable": "Wonder is unavailable (no session key, or the call failed) \u2014 no help available.",
+    "audit.ev.authorityGranted": "Authority granted",
+    "audit.ev.authorityRevoked": "Authority revoked (term ended)",
     "cite.commitment": "Commitment",
     "cite.source": "Source",
     "cite.remove": "Remove",
@@ -3495,6 +3505,80 @@
     setText("publishBtn", T("preview.publish"));
 
   }
+  /* Limited committee authority (TY, Nov 4): the committee judges whether an
+     answer is real and tracks follow-through — it never implements, compels,
+     funds, touches a post, or speaks for the government. Authority is an
+     explicit record on the member, granted on join and stripped when the term
+     ends; both are audit-logged. No second gate: servingApprover (below) is
+     the single check used by Approve/Decline, the help box, and the
+     committee view. */
+  var DEMO_MEMBER_ID = "demo-committee-1";
+  var FACE_KEY = "podium1.face.v1";
+  function exitWeekOf(m) { return (m && m.exitWeek != null) ? m.exitWeek : 12; }
+  /* Demo-only committee character (TY, Nov 4): a synthetic serving member so
+     anyone can see the committee face. NOT a seeded citizen — the seed stays
+     empty. Created lazily on first switch to the committee face, with the
+     grant audit-logged once at creation, never on switch. */
+  function ensureDemoCharacter() {
+    var c = PodiumStore.loadCommittee();
+    var members = (c && c.members) || [];
+    for (var i = 0; i < members.length; i++) {
+      if (members[i] && members[i].id === DEMO_MEMBER_ID) return members[i];
+    }
+    var stamped = "";
+    try { stamped = etNow().toISOString(); } catch (e) { stamped = String(Date.now()); }
+    var m = { id: DEMO_MEMBER_ID, name: "R. Alvarez", state: "New Mexico",
+      termWeek: 3, exitWeek: 12, termStart: "Oct 13, 2026", cycleOutDate: "Jan 4, 2027",
+      demo: true, authority: { granted: stamped }, draw: {} };
+    members.push(m);
+    try { c.members = members; PodiumStore.saveCommittee(c); } catch (e2) { /* private mode */ }
+    audit("authorityGranted", m.id, "demo character created");
+    return m;
+  }
+  function currentFace() { return (state.currentUserId === DEMO_MEMBER_ID) ? "committee" : "civilian"; }
+  function setFace(face) {
+    if (face === "committee") state.currentUserId = ensureDemoCharacter().id;
+    else state.currentUserId = null;
+    try { window.localStorage.setItem(FACE_KEY, face === "committee" ? "committee" : "civilian"); } catch (e) { /* private mode */ }
+    try { PodiumStore.save(state); } catch (e2) { /* session-only fallback */ }
+    renderCitizen();
+    renderCurrentView();
+  }
+  function applySavedFace() {
+    var f = null;
+    try { f = window.localStorage.getItem(FACE_KEY); } catch (e) { /* private mode */ }
+    if (f === "committee") {
+      try {
+        var members = PodiumStore.loadCommittee().members || [];
+        for (var i = 0; i < members.length; i++) {
+          if (members[i] && members[i].id === DEMO_MEMBER_ID && members[i].authority) { state.currentUserId = DEMO_MEMBER_ID; return; }
+        }
+      } catch (e2) { /* fall through to civilian */ }
+    }
+    if (state.currentUserId === DEMO_MEMBER_ID) state.currentUserId = null;
+  }
+  /* Minimal term-end check (TY, Nov 4): runs on load, before first render.
+     A holder whose term week has reached 12 loses the authority in the same
+     step (audit-logged); the account reverts to civilian. No draw, no
+     rotation — those stay out of scope. */
+  function checkAuthorityExpiry() {
+    var c = null;
+    try { c = PodiumStore.loadCommittee(); } catch (e) { return; }
+    var members = (c && c.members) || [], changed = false, i, m;
+    for (i = 0; i < members.length; i++) {
+      m = members[i];
+      if (m && m.authority && (m.termWeek || 0) >= 12) {
+        delete m.authority;
+        changed = true;
+        audit("authorityRevoked", m.id || "", "term ended");
+        if (state.currentUserId && m.id && state.currentUserId === m.id) state.currentUserId = null;
+      }
+    }
+    if (!changed) return;
+    try { PodiumStore.saveCommittee(c); } catch (e2) { /* private mode */ }
+    try { PodiumStore.save(state); } catch (e3) { /* session-only fallback */ }
+    try { window.localStorage.setItem(FACE_KEY, "civilian"); } catch (e4) { /* private mode */ }
+  }
   /* Answer approver (TY): the serving committee member who approved an answer.
      The approver is the signed-in citizen when they serve on the roster;
      otherwise approval is blocked (never invented). The approvedBy snapshot
@@ -3505,7 +3589,7 @@
     try { roster = PodiumStore.loadCommittee().members || []; } catch (e) { roster = []; }
     if (!roster.length) return { member: null, reason: "empty" };
     for (var i = 0; i < roster.length; i++) {
-      if (roster[i] && roster[i].id === state.currentUserId) return { member: roster[i], reason: null };
+      if (roster[i] && roster[i].id === state.currentUserId && roster[i].authority) return { member: roster[i], reason: null };
     }
     return { member: null, reason: "not-serving" };
   }
@@ -3647,9 +3731,26 @@
     setText("committeeRulesStructureB", T("committee.rules.structure.body"));
     setText("committeeRulesScheduleH", T("committee.rules.schedule.heading"));
     setText("committeeRulesScheduleB", T("committee.rules.schedule.body"));
+    /* Demo-only face switch (TY, Nov 4): civilian vs committee demo character.
+       Always visible — it is how anyone reaches the committee face. */
+    setText("faceSwitchLabel", T("switch.face.label"));
+    setText("faceOptCivilian", T("switch.face.civilian"));
+    setText("faceOptCommittee", T("switch.face.committee"));
+    var faceSelEl = $("faceSel");
+    if (faceSelEl) faceSelEl.value = currentFace();
     /* Committee help box (TY, Nov 4): Wonder-powered operational help, visible
        only to a serving committee member. Hidden (and emptied) for everyone
        else — no public trace of the box. */
+    var termCard = $("termCard"), svTerm = servingApprover();
+    if (termCard) {
+      if (!svTerm.member) { termCard.hidden = true; termCard.innerHTML = ""; }
+      else {
+        termCard.hidden = false;
+        termCard.innerHTML = '<p><span class="zone-label">' + esc(T("term.heading")) + "</span></p>" +
+          "<p>" + esc(Tf("term.week", { n: svTerm.member.termWeek })) + " \u00b7 " + esc(Tf("term.exit", { n: exitWeekOf(svTerm.member) })) + "</p>" +
+          '<p class="hint">' + esc(T("term.pay")) + "</p>";
+      }
+    }
     var helpBoxCard = $("helpCard");
     if (helpBoxCard) {
       if (!servingApprover().member) { helpBoxCard.hidden = true; helpBoxCard.innerHTML = ""; }
@@ -3667,16 +3768,20 @@
     }
     if (empty) empty.hidden = true;
     var html = "";
+    var gateMember = servingApprover().member;
     members.forEach(function (c) {
+      var detailed = !!gateMember;
       var dr = c.draw || {};
       var val = String(dr.beaconValue || "");
       var short = val.length > 12 ? val.slice(0, 12) + "\u2026" : val;
       var badge = "";
+      var demoBadge = (c.demo && detailed) ? ' <span class="post-topic">' + esc(T("switch.face.demo")) + "</span>" : "";
       if (c.termWeek === 1) badge = ' <span class="post-topic">' + esc(T("committee.joined")) + "</span>";
       if (c.termWeek === 12) badge = ' <span class="post-topic">' + esc(T("committee.cycling")) + "</span>";
       html += '<li class="card"><p class="post-meta"><span class="post-author">' + esc(c.name || "") + "</span>" +
-        (c.state ? "<span>" + esc(c.state) + "</span>" : "") +
-        ' <span class="post-topic">' + esc(Tf("committee.week", { n: c.termWeek })) + "</span>" + badge + "</p>" +
+        (c.state ? "<span>" + esc(c.state) + "</span>" : "") + demoBadge + (detailed ? "" : "</p>");
+      if (detailed) html += ' <span class="post-topic">' + esc(Tf("committee.week", { n: c.termWeek })) + "</span>" + badge +
+        ' <span class="post-topic">' + esc(Tf("term.exit", { n: exitWeekOf(c) })) + "</span></p>" +
         "<p class=\"hint\">" + esc(Tf("committee.terms", { start: c.termStart || "", out: c.cycleOutDate || "" })) + "</p>" +
         '<p><span class="zone-label">' + esc(T("committee.draw")) + "</span></p>" +
         '<dl class="draw-facts">' +
@@ -3684,7 +3789,8 @@
         "<dt>" + esc(T("committee.draw.value")) + '</dt><dd><span class="ref-code">' + esc(short) + "</span></dd>" +
         "<dt>" + esc(T("committee.draw.pool")) + "</dt><dd>" + esc(String(dr.poolSize == null ? "" : dr.poolSize)) + "</dd>" +
         "<dt>" + esc(T("committee.draw.pos")) + "</dt><dd>" + esc(String(dr.position == null ? "" : dr.position)) + "</dd>" +
-        "</dl></li>";
+        "</dl>";
+      html += "</li>";
     });
     list.innerHTML = html;
   }
@@ -3709,10 +3815,14 @@
   }
 
   /* ---------- init ---------- */
+  checkAuthorityExpiry();
+  applySavedFace();
   var langSelInit = $("langSel");
   if (langSelInit) {
     langSelInit.value = uiLang();
     langSelInit.addEventListener("change", function () { applyLanguage(langSelInit.value); });
+  var faceSelInit = $("faceSel");
+  if (faceSelInit && !faceSelInit.dataset.faceBound) { faceSelInit.dataset.faceBound = "1"; faceSelInit.addEventListener("change", function () { setFace(faceSelInit.value); }); }
   }
   applyStaticChrome();
   renderCitizen();

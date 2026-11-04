@@ -212,6 +212,9 @@
       <h3 class="statements-heading" id="committeeRulesScheduleH">Weekly schedule</h3>
       <p id="committeeRulesScheduleB">Members receive the selected posts as soon as they are selected and have 6 days on their own to think about them. They all meet in person on Wednesday morning to deliberate and vote. Then the narrator and the committee spokesperson make the script and record live at 1:00 PM ET. The Podium funds a round-trip ticket and a hotel for every member every week.</p>
     </details>
+    <label class="filter-label" id="faceSwitchWrap"><span id="faceSwitchLabel">View as</span>
+      <select id="faceSel" aria-labelledby="faceSwitchLabel"><option value="civilian" id="faceOptCivilian">Civilian (public view)</option><option value="committee" id="faceOptCommittee">Committee demo character</option></select></label>
+    <article class="card" id="termCard" hidden></article>
     <p class="hint" id="committeeEmpty" hidden>No committee members yet. The first members will be drawn by random draw once verified citizens agree to serve.</p>
     <ul id="committeeList" class="post-list"></ul>
     <p class="hint" id="committeeNote">One citizen cycles out and one new citizen joins every week, so the committee is always 12 people with a mix of experience.</p>
